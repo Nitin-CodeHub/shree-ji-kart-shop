@@ -42,8 +42,8 @@ const Header = () => {
         <div className="py-2 text-sm text-gray-600 border-b">
           <div className="flex justify-between items-center">
             <span>Free delivery on orders above ₹500</span>
-            <a href="tel:+919876543210" className="hover:text-orange-600">
-              Call us: +91 98765 43210
+            <a href="tel:+919755665650" className="hover:text-orange-600">
+              Call us: +91 97556 65650
             </a>
           </div>
         </div>
