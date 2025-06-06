@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ProductCard from './ProductCard';
 import { Product } from '@/contexts/CartContext';
@@ -75,8 +74,14 @@ const sampleProducts: Product[] = [
 ];
 
 const ProductGrid = () => {
+  const handleViewAllProducts = () => {
+    console.log('View All Products clicked');
+    // Add functionality to show more products or navigate to products page
+    alert('More products will be loaded here!');
+  };
+
   return (
-    <section className="py-16 bg-gray-50">
+    <section id="products" className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">Featured Products</h2>
@@ -92,9 +97,12 @@ const ProductGrid = () => {
         </div>
         
         <div className="text-center mt-12">
-          <button className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200">
+          <Button 
+            onClick={handleViewAllProducts}
+            className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200"
+          >
             View All Products
-          </button>
+          </Button>
         </div>
       </div>
     </section>

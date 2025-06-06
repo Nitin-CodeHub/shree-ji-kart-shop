@@ -3,6 +3,24 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 
 const Hero = () => {
+  const handleShopNow = () => {
+    console.log('Shop Now clicked');
+    // Scroll to products section
+    const productsSection = document.querySelector('#products');
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleViewCategories = () => {
+    console.log('View Categories clicked');
+    // Scroll to categories or show category filter
+    const headerNav = document.querySelector('nav');
+    if (headerNav) {
+      headerNav.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className="bg-gradient-to-r from-orange-50 to-green-50 py-16">
       <div className="container mx-auto px-4">
@@ -16,10 +34,19 @@ const Hero = () => {
               Get fresh vegetables, fruits, and daily essentials delivered to your doorstep from your trusted neighborhood store.
             </p>
             <div className="flex space-x-4">
-              <Button size="lg" className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3">
+              <Button 
+                size="lg" 
+                className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3"
+                onClick={handleShopNow}
+              >
                 Shop Now
               </Button>
-              <Button variant="outline" size="lg" className="border-orange-600 text-orange-600 hover:bg-orange-50 px-8 py-3">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="border-orange-600 text-orange-600 hover:bg-orange-50 px-8 py-3"
+                onClick={handleViewCategories}
+              >
                 View Categories
               </Button>
             </div>
