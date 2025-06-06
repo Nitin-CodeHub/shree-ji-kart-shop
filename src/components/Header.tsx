@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ShoppingCart, Menu, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -50,7 +49,7 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
     // Add login functionality here
   };
 
-  const categories = ['Groceries', 'Vegetables', 'Fruits', 'Dairy', 'Snacks', 'Beverages', 'Personal Care'];
+  const categories = ['Groceries', 'Vegetables', 'Fruits', 'Snacks', 'Body Care', 'Personal Care'];
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">

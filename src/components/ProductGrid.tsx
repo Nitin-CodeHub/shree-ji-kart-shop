@@ -25,14 +25,6 @@ const sampleProducts: Product[] = [
   },
   {
     id: 3,
-    name: "Fresh Milk",
-    price: 60,
-    image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    category: "Dairy",
-    unit: "liter"
-  },
-  {
-    id: 4,
     name: "Bananas",
     price: 50,
     image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
@@ -40,7 +32,7 @@ const sampleProducts: Product[] = [
     unit: "dozen"
   },
   {
-    id: 5,
+    id: 4,
     name: "Toor Dal",
     price: 140,
     originalPrice: 160,
@@ -49,7 +41,7 @@ const sampleProducts: Product[] = [
     unit: "kg"
   },
   {
-    id: 6,
+    id: 5,
     name: "Fresh Onions",
     price: 30,
     image: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
@@ -57,7 +49,7 @@ const sampleProducts: Product[] = [
     unit: "kg"
   },
   {
-    id: 7,
+    id: 6,
     name: "Apples",
     price: 180,
     originalPrice: 200,
@@ -66,12 +58,38 @@ const sampleProducts: Product[] = [
     unit: "kg"
   },
   {
+    id: 7,
+    name: "Potato Chips",
+    price: 45,
+    originalPrice: 55,
+    image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Snacks",
+    unit: "pack"
+  },
+  {
     id: 8,
-    name: "Paneer",
-    price: 320,
-    image: "https://images.unsplash.com/photo-1631452180539-96aca7d48617?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    category: "Dairy",
-    unit: "500g"
+    name: "Body Lotion",
+    price: 250,
+    originalPrice: 300,
+    image: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Body Care",
+    unit: "bottle"
+  },
+  {
+    id: 9,
+    name: "Namkeen Mix",
+    price: 80,
+    image: "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Snacks",
+    unit: "pack"
+  },
+  {
+    id: 10,
+    name: "Face Wash",
+    price: 180,
+    image: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Body Care",
+    unit: "tube"
   }
 ];
 
@@ -100,7 +118,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
     console.log('Category selected:', category);
   };
 
-  const categories = ['All', 'Groceries', 'Vegetables', 'Fruits', 'Dairy', 'Snacks', 'Beverages', 'Personal Care'];
+  const categories = ['All', 'Groceries', 'Vegetables', 'Fruits', 'Snacks', 'Body Care', 'Personal Care'];
 
   return (
     <section id="products" className="py-16 bg-gray-50">
