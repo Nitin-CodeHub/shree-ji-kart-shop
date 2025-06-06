@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import ProductCard from './ProductCard';
 import { Product } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -74,12 +75,32 @@ const sampleProducts: Product[] = [
   }
 ];
 
-const ProductGrid = () => {
+interface ProductGridProps {
+  selectedCategory?: string;
+}
+
+const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
+  const [localSelectedCategory, setLocalSelectedCategory] = useState<string>('All');
+  
+  // Use prop if provided, otherwise use local state
+  const activeCategory = selectedCategory || localSelectedCategory;
+  
+  // Filter products based on selected category
+  const filteredProducts = activeCategory === 'All' 
+    ? sampleProducts 
+    : sampleProducts.filter(product => product.category === activeCategory);
+
   const handleViewAllProducts = () => {
     console.log('View All Products clicked');
-    // Add functionality to show more products or navigate to products page
     alert('More products will be loaded here!');
   };
+
+  const handleCategorySelect = (category: string) => {
+    setLocalSelectedCategory(category);
+    console.log('Category selected:', category);
+  };
+
+  const categories = ['All', 'Groceries', 'Vegetables', 'Fruits', 'Dairy', 'Snacks', 'Beverages', 'Personal Care'];
 
   return (
     <section id="products" className="py-16 bg-gray-50">
@@ -90,21 +111,63 @@ const ProductGrid = () => {
             Discover our carefully selected range of fresh groceries, vegetables, fruits, and daily essentials at unbeatable prices.
           </p>
         </div>
+
+        {/* Category Filter Buttons - Only show if no external category is selected */}
+        {!selectedCategory && (
+          <div className="flex flex-wrap justify-center gap-3 mb-8">
+            {categories.map((category) => (
+              <Button
+                key={category}
+                onClick={() => handleCategorySelect(category)}
+                variant={activeCategory === category ? "default" : "outline"}
+                className={`${
+                  activeCategory === category 
+                    ? 'bg-orange-600 hover:bg-orange-700 text-white' 
+                    : 'border-orange-200 text-orange-600 hover:bg-orange-50'
+                } transition-colors duration-200`}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+        )}
+
+        {/* Products Display */}
+        <div className="mb-6">
+          <h3 className="text-xl font-semibold text-gray-700 mb-4">
+            {activeCategory === 'All' ? 'All Products' : `${activeCategory} Products`}
+            <span className="text-sm text-gray-500 ml-2">({filteredProducts.length} items)</span>
+          </h3>
+        </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {sampleProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {filteredProducts.length > 0 ? (
+            filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-500 text-lg">No products found in {activeCategory} category.</p>
+              <Button 
+                onClick={() => handleCategorySelect('All')}
+                className="mt-4 bg-orange-600 hover:bg-orange-700 text-white"
+              >
+                View All Products
+              </Button>
+            </div>
+          )}
         </div>
         
-        <div className="text-center mt-12">
-          <Button 
-            onClick={handleViewAllProducts}
-            className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200"
-          >
-            View All Products
-          </Button>
-        </div>
+        {filteredProducts.length > 0 && (
+          <div className="text-center mt-12">
+            <Button 
+              onClick={handleViewAllProducts}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200"
+            >
+              View All Products
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );

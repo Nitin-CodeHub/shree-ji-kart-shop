@@ -14,9 +14,14 @@ import {
 } from "@/components/ui/sheet";
 import CartSidebar from './CartSidebar';
 
-const Header = () => {
+interface HeaderProps {
+  onCategorySelect?: (category: string) => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
   const { cart } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string>('All');
   const itemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -27,13 +32,25 @@ const Header = () => {
 
   const handleCategoryClick = (category: string) => {
     console.log('Category clicked:', category);
-    // Add category filtering functionality here
+    setActiveCategory(category);
+    
+    if (onCategorySelect) {
+      onCategorySelect(category);
+    }
+    
+    // Scroll to products section
+    const productsSection = document.getElementById('products');
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const handleLogin = () => {
     console.log('Login clicked');
     // Add login functionality here
   };
+
+  const categories = ['Groceries', 'Vegetables', 'Fruits', 'Dairy', 'Snacks', 'Beverages', 'Personal Care'];
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
@@ -104,11 +121,21 @@ const Header = () => {
         {/* Navigation */}
         <nav className="pb-4">
           <div className="flex space-x-8 overflow-x-auto">
-            {['Groceries', 'Vegetables', 'Fruits', 'Dairy', 'Snacks', 'Beverages', 'Personal Care'].map((category) => (
+            <button
+              onClick={() => handleCategoryClick('All')}
+              className={`text-gray-700 hover:text-orange-600 whitespace-nowrap py-2 transition-colors duration-200 ${
+                activeCategory === 'All' ? 'text-orange-600 font-semibold border-b-2 border-orange-600' : ''
+              }`}
+            >
+              All Products
+            </button>
+            {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => handleCategoryClick(category)}
-                className="text-gray-700 hover:text-orange-600 whitespace-nowrap py-2 transition-colors duration-200"
+                className={`text-gray-700 hover:text-orange-600 whitespace-nowrap py-2 transition-colors duration-200 ${
+                  activeCategory === category ? 'text-orange-600 font-semibold border-b-2 border-orange-600' : ''
+                }`}
               >
                 {category}
               </button>
