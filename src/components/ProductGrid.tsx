@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { Product } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -100,6 +100,13 @@ interface ProductGridProps {
 const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
   const [localSelectedCategory, setLocalSelectedCategory] = useState<string>('All');
   
+  // Update local category when prop changes
+  useEffect(() => {
+    if (selectedCategory) {
+      setLocalSelectedCategory(selectedCategory);
+    }
+  }, [selectedCategory]);
+  
   // Use prop if provided, otherwise use local state
   const activeCategory = selectedCategory || localSelectedCategory;
   
@@ -115,7 +122,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
 
   const handleCategorySelect = (category: string) => {
     setLocalSelectedCategory(category);
-    console.log('Category selected:', category);
+    console.log('Category selected in ProductGrid:', category);
   };
 
   const categories = ['All', 'Groceries', 'Vegetables', 'Snacks', 'Body Care', 'Personal Care'];

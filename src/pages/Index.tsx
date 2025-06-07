@@ -11,6 +11,7 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
   const handleCategorySelect = (category: string) => {
+    console.log('Category selected in Index:', category);
     setSelectedCategory(category);
   };
 

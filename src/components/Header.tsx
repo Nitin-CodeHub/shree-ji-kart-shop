@@ -22,6 +22,7 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
   const { cart } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const itemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -37,6 +38,9 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
     if (onCategorySelect) {
       onCategorySelect(category);
     }
+    
+    // Close mobile menu if open
+    setMobileMenuOpen(false);
     
     // Scroll to products section
     const productsSection = document.getElementById('products');
@@ -68,9 +72,53 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
         {/* Main header */}
         <div className="py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu className="h-6 w-6" />
-            </Button>
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left">
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                  <SheetDescription>
+                    Navigate through our categories
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="flex flex-col space-y-4 mt-6">
+                  <button
+                    onClick={() => handleCategoryClick('All')}
+                    className={`text-left py-2 px-4 rounded transition-colors duration-200 ${
+                      activeCategory === 'All' 
+                        ? 'bg-orange-600 text-white' 
+                        : 'text-gray-700 hover:bg-orange-50'
+                    }`}
+                  >
+                    All Products
+                  </button>
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => handleCategoryClick(category)}
+                      className={`text-left py-2 px-4 rounded transition-colors duration-200 ${
+                        activeCategory === category 
+                          ? 'bg-orange-600 text-white' 
+                          : 'text-gray-700 hover:bg-orange-50'
+                      }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                  <a 
+                    href="/about" 
+                    className="text-left py-2 px-4 rounded text-gray-700 hover:bg-orange-50 transition-colors duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    About Us
+                  </a>
+                </div>
+              </SheetContent>
+            </Sheet>
             <h1 className="text-2xl font-bold text-orange-600 cursor-pointer">
               Shree Ji Kirana Store
             </h1>
@@ -118,8 +166,8 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
           </div>
         </div>
         
-        {/* Navigation */}
-        <nav className="pb-4">
+        {/* Navigation - Desktop */}
+        <nav className="pb-4 hidden md:block">
           <div className="flex space-x-8 overflow-x-auto">
             <button
               onClick={() => handleCategoryClick('All')}
