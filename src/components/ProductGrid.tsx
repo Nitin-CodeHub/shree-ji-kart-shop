@@ -90,6 +90,60 @@ const sampleProducts: Product[] = [
     image: "https://images.unsplash.com/photo-1583049254548-c5b8c7e84491?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
     category: "Vegetables",
     unit: "250g"
+  },
+  // New Body Care Products
+  {
+    id: 13,
+    name: "Dettol Soap",
+    price: 35,
+    originalPrice: 40,
+    image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Body Care",
+    unit: "piece"
+  },
+  {
+    id: 14,
+    name: "Himalaya Face Wash",
+    price: 120,
+    originalPrice: 140,
+    image: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Body Care",
+    unit: "tube"
+  },
+  {
+    id: 15,
+    name: "Garnier Face Wash",
+    price: 150,
+    originalPrice: 175,
+    image: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Body Care",
+    unit: "tube"
+  },
+  // New Snacks Products
+  {
+    id: 16,
+    name: "Kurkure Masala Munch",
+    price: 20,
+    image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Snacks",
+    unit: "pack"
+  },
+  {
+    id: 17,
+    name: "Haldiram Bhujia",
+    price: 60,
+    originalPrice: 70,
+    image: "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Snacks",
+    unit: "pack"
+  },
+  {
+    id: 18,
+    name: "Diamond Biscuits",
+    price: 25,
+    image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Snacks",
+    unit: "pack"
   }
 ];
 
