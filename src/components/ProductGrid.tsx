@@ -24,14 +24,6 @@ const sampleProducts: Product[] = [
     unit: "kg"
   },
   {
-    id: 3,
-    name: "Bananas",
-    price: 50,
-    image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    category: "Fruits",
-    unit: "dozen"
-  },
-  {
     id: 4,
     name: "Toor Dal",
     price: 140,
@@ -46,15 +38,6 @@ const sampleProducts: Product[] = [
     price: 30,
     image: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
     category: "Vegetables",
-    unit: "kg"
-  },
-  {
-    id: 6,
-    name: "Apples",
-    price: 180,
-    originalPrice: 200,
-    image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    category: "Fruits",
     unit: "kg"
   },
   {
@@ -90,6 +73,23 @@ const sampleProducts: Product[] = [
     image: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
     category: "Body Care",
     unit: "tube"
+  },
+  {
+    id: 11,
+    name: "Wheat Flour",
+    price: 55,
+    originalPrice: 65,
+    image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Groceries",
+    unit: "kg"
+  },
+  {
+    id: 12,
+    name: "Green Chillies",
+    price: 25,
+    image: "https://images.unsplash.com/photo-1583049254548-c5b8c7e84491?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Vegetables",
+    unit: "250g"
   }
 ];
 
@@ -118,7 +118,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
     console.log('Category selected:', category);
   };
 
-  const categories = ['All', 'Groceries', 'Vegetables', 'Fruits', 'Snacks', 'Body Care', 'Personal Care'];
+  const categories = ['All', 'Groceries', 'Vegetables', 'Snacks', 'Body Care', 'Personal Care'];
 
   return (
     <section id="products" className="py-16 bg-gray-50">
@@ -126,7 +126,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">Featured Products</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Discover our carefully selected range of fresh groceries, vegetables, fruits, and daily essentials at unbeatable prices.
+            Discover our carefully selected range of fresh groceries, vegetables, and daily essentials at unbeatable prices.
           </p>
         </div>
 

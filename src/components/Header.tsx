@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ShoppingCart, Menu, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -49,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
     // Add login functionality here
   };
 
-  const categories = ['Groceries', 'Vegetables', 'Fruits', 'Snacks', 'Body Care', 'Personal Care'];
+  const categories = ['Groceries', 'Vegetables', 'Snacks', 'Body Care', 'Personal Care'];
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
@@ -139,6 +140,9 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
                 {category}
               </button>
             ))}
+            <a href="/about" className="text-gray-700 hover:text-orange-600 whitespace-nowrap py-2 transition-colors duration-200">
+              About Us
+            </a>
           </div>
         </nav>
       </div>
