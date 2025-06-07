@@ -32,10 +32,11 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
   };
 
   const handleCategoryClick = (category: string) => {
-    console.log('Category clicked:', category);
+    console.log('Header category clicked:', category);
     setActiveCategory(category);
     
     if (onCategorySelect) {
+      console.log('Calling onCategorySelect with:', category);
       onCategorySelect(category);
     }
     
@@ -109,13 +110,6 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
                       {category}
                     </button>
                   ))}
-                  <a 
-                    href="/about" 
-                    className="text-left py-2 px-4 rounded text-gray-700 hover:bg-orange-50 transition-colors duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    About Us
-                  </a>
                 </div>
               </SheetContent>
             </Sheet>
@@ -188,9 +182,6 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
                 {category}
               </button>
             ))}
-            <a href="/about" className="text-gray-700 hover:text-orange-600 whitespace-nowrap py-2 transition-colors duration-200">
-              About Us
-            </a>
           </div>
         </nav>
       </div>

@@ -97,23 +97,22 @@ interface ProductGridProps {
   selectedCategory?: string;
 }
 
-const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
-  const [localSelectedCategory, setLocalSelectedCategory] = useState<string>('All');
+const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory = 'All' }) => {
+  const [currentCategory, setCurrentCategory] = useState<string>('All');
   
-  // Update local category when prop changes
+  // Update current category when prop changes
   useEffect(() => {
-    if (selectedCategory) {
-      setLocalSelectedCategory(selectedCategory);
-    }
+    console.log('ProductGrid received selectedCategory:', selectedCategory);
+    setCurrentCategory(selectedCategory);
   }, [selectedCategory]);
   
-  // Use prop if provided, otherwise use local state
-  const activeCategory = selectedCategory || localSelectedCategory;
-  
-  // Filter products based on selected category
-  const filteredProducts = activeCategory === 'All' 
+  // Filter products based on current category
+  const filteredProducts = currentCategory === 'All' 
     ? sampleProducts 
-    : sampleProducts.filter(product => product.category === activeCategory);
+    : sampleProducts.filter(product => product.category === currentCategory);
+
+  console.log('Current category:', currentCategory);
+  console.log('Filtered products count:', filteredProducts.length);
 
   const handleViewAllProducts = () => {
     console.log('View All Products clicked');
@@ -121,8 +120,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
   };
 
   const handleCategorySelect = (category: string) => {
-    setLocalSelectedCategory(category);
-    console.log('Category selected in ProductGrid:', category);
+    console.log('Local category select in ProductGrid:', category);
+    setCurrentCategory(category);
   };
 
   const categories = ['All', 'Groceries', 'Vegetables', 'Snacks', 'Body Care', 'Personal Care'];
@@ -137,16 +136,16 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
           </p>
         </div>
 
-        {/* Category Filter Buttons - Only show if no external category is selected */}
-        {!selectedCategory && (
+        {/* Category Filter Buttons - Only show if no external category is controlled */}
+        {!selectedCategory || selectedCategory === 'All' ? (
           <div className="flex flex-wrap justify-center gap-3 mb-8">
             {categories.map((category) => (
               <Button
                 key={category}
                 onClick={() => handleCategorySelect(category)}
-                variant={activeCategory === category ? "default" : "outline"}
+                variant={currentCategory === category ? "default" : "outline"}
                 className={`${
-                  activeCategory === category 
+                  currentCategory === category 
                     ? 'bg-orange-600 hover:bg-orange-700 text-white' 
                     : 'border-orange-200 text-orange-600 hover:bg-orange-50'
                 } transition-colors duration-200`}
@@ -155,12 +154,12 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
               </Button>
             ))}
           </div>
-        )}
+        ) : null}
 
         {/* Products Display */}
         <div className="mb-6">
           <h3 className="text-xl font-semibold text-gray-700 mb-4">
-            {activeCategory === 'All' ? 'All Products' : `${activeCategory} Products`}
+            {currentCategory === 'All' ? 'All Products' : `${currentCategory} Products`}
             <span className="text-sm text-gray-500 ml-2">({filteredProducts.length} items)</span>
           </h3>
         </div>
@@ -172,7 +171,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
             ))
           ) : (
             <div className="col-span-full text-center py-12">
-              <p className="text-gray-500 text-lg">No products found in {activeCategory} category.</p>
+              <p className="text-gray-500 text-lg">No products found in {currentCategory} category.</p>
               <Button 
                 onClick={() => handleCategorySelect('All')}
                 className="mt-4 bg-orange-600 hover:bg-orange-700 text-white"
