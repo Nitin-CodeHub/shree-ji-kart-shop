@@ -1,15 +1,17 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Plus, Minus, Trash2 } from 'lucide-react';
 
 const CartSidebar = () => {
   const { cart, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
+  const navigate = useNavigate();
 
   const handleCheckout = () => {
     console.log('Proceeding to checkout with items:', cart);
-    alert('Checkout functionality will be implemented here!');
+    navigate('/checkout');
   };
 
   if (cart.length === 0) {
