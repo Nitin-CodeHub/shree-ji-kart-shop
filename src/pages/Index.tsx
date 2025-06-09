@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { CartProvider } from '@/contexts/CartContext';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import ProductGrid from '@/components/ProductGrid';
@@ -16,15 +15,13 @@ const Index = () => {
   };
 
   return (
-    <CartProvider>
-      <div className="min-h-screen bg-white">
-        <Header onCategorySelect={handleCategorySelect} />
-        <Hero />
-        <ProductGrid selectedCategory={selectedCategory} />
-        <Features />
-        <Footer />
-      </div>
-    </CartProvider>
+    <div className="min-h-screen bg-white">
+      <Header onCategorySelect={handleCategorySelect} />
+      <Hero />
+      <ProductGrid selectedCategory={selectedCategory} />
+      <Features />
+      <Footer />
+    </div>
   );
 };
 
