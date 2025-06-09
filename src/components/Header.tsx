@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Menu, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
   const { cart } = useCart();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -87,6 +89,13 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
                   </SheetDescription>
                 </SheetHeader>
                 <div className="flex flex-col space-y-4 mt-6">
+                  <Link 
+                    to="/products"
+                    className="text-left py-2 px-4 rounded transition-colors duration-200 text-gray-700 hover:bg-orange-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    All Products
+                  </Link>
                   <button
                     onClick={() => handleCategoryClick('All')}
                     className={`text-left py-2 px-4 rounded transition-colors duration-200 ${
@@ -95,7 +104,7 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
                         : 'text-gray-700 hover:bg-orange-50'
                     }`}
                   >
-                    All Products
+                    Featured Products
                   </button>
                   {categories.map((category) => (
                     <button
@@ -113,9 +122,9 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
                 </div>
               </SheetContent>
             </Sheet>
-            <h1 className="text-2xl font-bold text-orange-600 cursor-pointer">
+            <Link to="/" className="text-2xl font-bold text-orange-600 cursor-pointer hover:text-orange-700 transition-colors">
               Shree Ji Kirana Store
-            </h1>
+            </Link>
           </div>
           
           <div className="hidden md:flex flex-1 max-w-xl mx-8">
@@ -163,13 +172,19 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
         {/* Navigation - Desktop */}
         <nav className="pb-4 hidden md:block">
           <div className="flex space-x-8 overflow-x-auto">
+            <Link
+              to="/products"
+              className="text-gray-700 hover:text-orange-600 whitespace-nowrap py-2 transition-colors duration-200"
+            >
+              All Products
+            </Link>
             <button
               onClick={() => handleCategoryClick('All')}
               className={`text-gray-700 hover:text-orange-600 whitespace-nowrap py-2 transition-colors duration-200 ${
                 activeCategory === 'All' ? 'text-orange-600 font-semibold border-b-2 border-orange-600' : ''
               }`}
             >
-              All Products
+              Featured Products
             </button>
             {categories.map((category) => (
               <button

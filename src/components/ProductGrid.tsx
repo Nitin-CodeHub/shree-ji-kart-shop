@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ProductCard from './ProductCard';
 import { Product } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -152,6 +153,7 @@ interface ProductGridProps {
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory = 'All' }) => {
+  const navigate = useNavigate();
   const [currentCategory, setCurrentCategory] = useState<string>('All');
   
   // Update current category when prop changes
@@ -169,8 +171,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory = 'All' }) =
   console.log('Filtered products count:', filteredProducts.length);
 
   const handleViewAllProducts = () => {
-    console.log('View All Products clicked');
-    alert('More products will be loaded here!');
+    console.log('View All Products clicked - navigating to /products');
+    navigate('/products');
   };
 
   const handleCategorySelect = (category: string) => {
@@ -220,7 +222,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory = 'All' }) =
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.length > 0 ? (
-            filteredProducts.map((product) => (
+            filteredProducts.slice(0, 8).map((product) => (
               <ProductCard key={product.id} product={product} />
             ))
           ) : (
