@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export interface Product {
@@ -15,13 +14,30 @@ export interface CartItem extends Product {
   quantity: number;
 }
 
+export interface Order {
+  id: string;
+  items: CartItem[];
+  customer: {
+    name: string;
+    phone: string;
+    address: string;
+    pincode: string;
+  };
+  paymentMethod: 'upi' | 'cod';
+  total: number;
+  status: 'pending' | 'confirmed' | 'delivered';
+  timestamp: string;
+}
+
 interface CartContextType {
   cart: CartItem[];
+  orders: Order[];
   addToCart: (product: Product) => void;
   removeFromCart: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
   getTotalPrice: () => number;
   clearCart: () => void;
+  addOrder: (order: Order) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -40,6 +56,7 @@ interface CartProviderProps {
 
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   const addToCart = (product: Product) => {
     setCart(prev => {
@@ -81,14 +98,20 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     setCart([]);
   };
 
+  const addOrder = (order: Order) => {
+    setOrders(prev => [order, ...prev]);
+  };
+
   return (
     <CartContext.Provider value={{
       cart,
+      orders,
       addToCart,
       removeFromCart,
       updateQuantity,
       getTotalPrice,
-      clearCart
+      clearCart,
+      addOrder
     }}>
       {children}
     </CartContext.Provider>
