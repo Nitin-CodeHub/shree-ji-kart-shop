@@ -1,12 +1,11 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Menu, Search, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/contexts/CartContext';
-import { useUser } from '@/contexts/UserContext';
-import LoginDialog from './LoginDialog';
+import { useAuth } from '@/hooks/useAuth';
+import AuthDialog from './AuthDialog';
 import {
   Sheet,
   SheetContent,
@@ -29,12 +28,12 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
   const { cart } = useCart();
-  const { user, isLoggedIn, logout } = useUser();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const itemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -63,11 +62,11 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
   };
 
   const handleLogin = () => {
-    setLoginDialogOpen(true);
+    setAuthDialogOpen(true);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     navigate('/');
   };
 
@@ -105,9 +104,9 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
                 <div className="flex flex-col space-y-4 mt-6">
                   {/* User login/logout for mobile */}
                   <div className="border-b pb-4">
-                    {isLoggedIn ? (
+                    {user ? (
                       <div className="space-y-2">
-                        <p className="text-sm font-medium">Welcome, {user?.name}!</p>
+                        <p className="text-sm font-medium">Welcome, {user.email}!</p>
                         <Button 
                           variant="outline" 
                           size="sm" 
@@ -184,12 +183,12 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
           <div className="flex items-center space-x-4">
             {/* Desktop Login/User Menu */}
             <div className="hidden md:block">
-              {isLoggedIn ? (
+              {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center space-x-2">
                       <User className="h-4 w-4" />
-                      <span>{user?.name}</span>
+                      <span>{user.email}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-white">
@@ -267,7 +266,7 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
         </nav>
       </div>
       
-      <LoginDialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen} />
+      <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
     </header>
   );
 };
