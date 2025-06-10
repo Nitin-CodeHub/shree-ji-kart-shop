@@ -1,12 +1,20 @@
 
 import React from 'react';
-import { useCart } from '@/contexts/CartContext';
+import { useOrders } from '@/hooks/useOrders';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
 const OrderHistory = () => {
-  const { orders } = useCart();
+  const { orders, loading } = useOrders();
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">Loading your orders...</p>
+      </div>
+    );
+  }
 
   if (orders.length === 0) {
     return (

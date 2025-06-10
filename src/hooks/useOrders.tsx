@@ -1,13 +1,29 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-interface Order {
+export interface Order {
   id: string;
-  total_amount: number;
   items: any[];
+  customer: {
+    name: string;
+    phone: string;
+    address: string;
+    pincode: string;
+  };
+  paymentMethod: 'upi' | 'cod';
+  total: number;
+  status: 'pending' | 'confirmed' | 'delivered';
+  timestamp: string;
+}
+
+interface DatabaseOrder {
+  id: string;
+  user_id: string;
+  total_amount: number;
+  items: any;
   customer_name: string;
   customer_phone: string;
   customer_address: string;
@@ -22,15 +38,9 @@ export const useOrders = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (user) {
-      fetchOrders();
-    }
-  }, [user]);
-
   const fetchOrders = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -40,8 +50,25 @@ export const useOrders = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
-    } catch (error) {
+
+      // Transform database orders to frontend format
+      const transformedOrders: Order[] = (data as DatabaseOrder[]).map((order) => ({
+        id: order.id,
+        items: Array.isArray(order.items) ? order.items : [],
+        customer: {
+          name: order.customer_name,
+          phone: order.customer_phone,
+          address: order.customer_address,
+          pincode: order.customer_pincode,
+        },
+        paymentMethod: 'cod' as const,
+        total: Number(order.total_amount),
+        status: order.status as 'pending' | 'confirmed' | 'delivered',
+        timestamp: order.created_at,
+      }));
+
+      setOrders(transformedOrders);
+    } catch (error: any) {
       console.error('Error fetching orders:', error);
       toast({
         title: "Error",
@@ -53,58 +80,47 @@ export const useOrders = () => {
     }
   };
 
-  const createOrder = async (orderData: {
-    total_amount: number;
-    items: any[];
-    customer_name: string;
-    customer_phone: string;
-    customer_address: string;
-    customer_pincode: string;
-  }) => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please login to place an order",
-        variant: "destructive"
-      });
-      return null;
-    }
+  const addOrder = async (order: Omit<Order, 'id' | 'timestamp'>) => {
+    if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('orders')
         .insert({
-          ...orderData,
           user_id: user.id,
-          status: 'pending'
-        })
-        .select()
-        .single();
+          total_amount: order.total,
+          items: order.items,
+          customer_name: order.customer.name,
+          customer_phone: order.customer.phone,
+          customer_address: order.customer.address,
+          customer_pincode: order.customer.pincode,
+          status: order.status,
+        });
 
       if (error) throw error;
 
       toast({
-        title: "Order Placed!",
-        description: "Your order has been placed successfully",
+        title: "Order Placed",
+        description: "Your order has been placed successfully!",
       });
 
-      fetchOrders(); // Refresh orders
-      return data;
-    } catch (error) {
-      console.error('Error creating order:', error);
+      // Refresh orders
+      fetchOrders();
+    } catch (error: any) {
+      console.error('Error adding order:', error);
       toast({
         title: "Error",
         description: "Failed to place order",
         variant: "destructive"
       });
-      return null;
     }
   };
 
-  return {
-    orders,
-    loading,
-    fetchOrders,
-    createOrder
-  };
+  useEffect(() => {
+    if (user) {
+      fetchOrders();
+    }
+  }, [user]);
+
+  return { orders, loading, addOrder, fetchOrders };
 };

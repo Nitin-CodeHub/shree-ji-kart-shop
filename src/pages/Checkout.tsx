@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,8 +13,9 @@ import { ArrowLeft, CreditCard, Truck, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Checkout = () => {
-  const { cart, getTotalPrice, clearCart, addOrder } = useCart();
-  const { user, isLoggedIn } = useUser();
+  const { cart, getTotalPrice, clearCart } = useCart();
+  const { user } = useAuth();
+  const { addOrder } = useOrders();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -29,15 +32,16 @@ const Checkout = () => {
 
   // Load user details if logged in
   useEffect(() => {
-    if (isLoggedIn && user) {
+    if (user) {
+      // You can fetch user profile data here if needed
       setCustomerInfo({
-        name: user.name,
-        phone: user.phone,
-        address: user.address,
-        pincode: user.pincode
+        name: user.email || '',
+        phone: '',
+        address: '',
+        pincode: ''
       });
     }
-  }, [isLoggedIn, user]);
+  }, [user]);
 
   const handleInputChange = (field: string, value: string) => {
     setCustomerInfo(prev => ({
@@ -57,6 +61,16 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
+    // Check if user is authenticated
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please login to place an order",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Validate required fields
     if (!customerInfo.name || !customerInfo.phone || !customerInfo.address || !customerInfo.pincode) {
       toast({
@@ -89,20 +103,15 @@ const Checkout = () => {
     
     // Create order
     const order = {
-      id: Date.now().toString(),
       items: [...cart],
       customer: { ...customerInfo },
       paymentMethod,
       total: getTotalPrice(),
       status: 'pending' as const,
-      timestamp: new Date().toISOString()
     };
 
-    // Simulate order processing
-    setTimeout(() => {
-      console.log('Order placed:', order);
-      
-      addOrder(order);
+    try {
+      await addOrder(order);
       clearCart();
       setIsProcessing(false);
       
@@ -111,27 +120,32 @@ const Checkout = () => {
         description: `Your order will be delivered soon. Payment method: ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'UPI'}`,
       });
 
-      navigate('/');
-    }, 2000);
+      navigate('/orders');
+    } catch (error) {
+      setIsProcessing(false);
+      toast({
+        title: "Error",
+        description: "Failed to place order. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const confirmUpiPayment = () => {
+  const confirmUpiPayment = async () => {
+    if (!user) return;
+
     setIsProcessing(true);
     
     const order = {
-      id: Date.now().toString(),
       items: [...cart],
       customer: { ...customerInfo },
       paymentMethod,
       total: getTotalPrice(),
       status: 'confirmed' as const,
-      timestamp: new Date().toISOString()
     };
 
-    setTimeout(() => {
-      console.log('UPI Order confirmed:', order);
-      
-      addOrder(order);
+    try {
+      await addOrder(order);
       clearCart();
       setIsProcessing(false);
       setShowPaymentDetails(false);
@@ -142,7 +156,14 @@ const Checkout = () => {
       });
 
       navigate('/orders');
-    }, 2000);
+    } catch (error) {
+      setIsProcessing(false);
+      toast({
+        title: "Error",
+        description: "Failed to confirm payment. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (cart.length === 0) {
@@ -236,7 +257,7 @@ const Checkout = () => {
               <CardHeader>
                 <CardTitle>
                   Delivery Information
-                  {isLoggedIn && (
+                  {user && (
                     <span className="text-sm font-normal text-green-600 ml-2">
                       (Auto-filled from your profile)
                     </span>
