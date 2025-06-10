@@ -1,7 +1,7 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
+import { useUser } from '@/contexts/UserContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const Checkout = () => {
   const { cart, getTotalPrice, clearCart, addOrder } = useCart();
+  const { user, isLoggedIn } = useUser();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -25,6 +26,18 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod'>('upi');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
+
+  // Load user details if logged in
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      setCustomerInfo({
+        name: user.name,
+        phone: user.phone,
+        address: user.address,
+        pincode: user.pincode
+      });
+    }
+  }, [isLoggedIn, user]);
 
   const handleInputChange = (field: string, value: string) => {
     setCustomerInfo(prev => ({
@@ -95,7 +108,7 @@ const Checkout = () => {
       
       toast({
         title: "Order Placed Successfully!",
-        description: `Your order will be delivered soon. Payment method: ${paymentMethod === 'upi' ? 'UPI' : 'Cash on Delivery'}`,
+        description: `Your order will be delivered soon. Payment method: ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'UPI'}`,
       });
 
       navigate('/');
@@ -221,7 +234,14 @@ const Checkout = () => {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Delivery Information</CardTitle>
+                <CardTitle>
+                  Delivery Information
+                  {isLoggedIn && (
+                    <span className="text-sm font-normal text-green-600 ml-2">
+                      (Auto-filled from your profile)
+                    </span>
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>

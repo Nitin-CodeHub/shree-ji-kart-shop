@@ -1,10 +1,12 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Menu, Search } from 'lucide-react';
+import { ShoppingCart, Menu, Search, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/contexts/CartContext';
+import { useUser } from '@/contexts/UserContext';
+import LoginDialog from './LoginDialog';
 import {
   Sheet,
   SheetContent,
@@ -13,6 +15,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import CartSidebar from './CartSidebar';
 
 interface HeaderProps {
@@ -21,10 +29,12 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
   const { cart } = useCart();
+  const { user, isLoggedIn, logout } = useUser();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const itemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -53,8 +63,12 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
   };
 
   const handleLogin = () => {
-    console.log('Login clicked');
-    // Add login functionality here
+    setLoginDialogOpen(true);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
   const categories = ['Groceries', 'Vegetables', 'Snacks', 'Body Care', 'Personal Care'];
@@ -89,6 +103,33 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
                   </SheetDescription>
                 </SheetHeader>
                 <div className="flex flex-col space-y-4 mt-6">
+                  {/* User login/logout for mobile */}
+                  <div className="border-b pb-4">
+                    {isLoggedIn ? (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Welcome, {user?.name}!</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleLogout}
+                          className="w-full"
+                        >
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Logout
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        onClick={handleLogin}
+                        className="w-full"
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        Login
+                      </Button>
+                    )}
+                  </div>
+                  
                   <Link 
                     to="/products"
                     className="text-left py-2 px-4 rounded transition-colors duration-200 text-gray-700 hover:bg-orange-50"
@@ -141,9 +182,34 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" className="hidden md:flex" onClick={handleLogin}>
-              Login
-            </Button>
+            {/* Desktop Login/User Menu */}
+            <div className="hidden md:block">
+              {isLoggedIn ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center space-x-2">
+                      <User className="h-4 w-4" />
+                      <span>{user?.name}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-white">
+                    <DropdownMenuItem onClick={() => navigate('/orders')}>
+                      Order History
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button variant="ghost" onClick={handleLogin}>
+                  <User className="h-4 w-4 mr-2" />
+                  Login
+                </Button>
+              )}
+            </div>
+            
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" className="relative">
@@ -200,6 +266,8 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
           </div>
         </nav>
       </div>
+      
+      <LoginDialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen} />
     </header>
   );
 };
