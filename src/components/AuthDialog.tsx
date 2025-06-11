@@ -21,7 +21,11 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    name: '',
+    phone: '',
+    address: '',
+    pincode: ''
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -31,52 +35,112 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    
+  const validateForm = () => {
     if (!formData.email || !formData.password) {
       toast({
         title: "Missing Information",
-        description: "Please fill all required fields",
+        description: "Please fill email and password",
         variant: "destructive"
       });
+      return false;
+    }
+
+    if (!isLogin && !formData.name) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill your name for registration",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    
+    setLoading(true);
+
+    try {
+      const { error } = isLogin 
+        ? await signIn(formData.email, formData.password)
+        : await signUp(formData.email, formData.password, {
+            name: formData.name,
+            phone: formData.phone,
+            address: formData.address,
+            pincode: formData.pincode
+          });
+
+      if (error) {
+        let errorMessage = error.message;
+        
+        // Handle specific error cases
+        if (error.message?.includes('Email not confirmed')) {
+          errorMessage = 'Please check your email and click the verification link before signing in.';
+        } else if (error.message?.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password. Please check your credentials.';
+        } else if (error.message?.includes('User already registered')) {
+          errorMessage = 'An account with this email already exists. Try signing in instead.';
+        }
+
+        toast({
+          title: "Authentication Error",
+          description: errorMessage,
+          variant: "destructive"
+        });
+      } else {
+        if (!isLogin) {
+          toast({
+            title: "Account Created!",
+            description: "Please check your email to verify your account before signing in.",
+          });
+        } else {
+          toast({
+            title: "Login Successful!",
+            description: "Welcome back!",
+          });
+        }
+        onOpenChange(false);
+        setFormData({ email: '', password: '', name: '', phone: '', address: '', pincode: '' });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const { error } = isLogin 
-      ? await signIn(formData.email, formData.password)
-      : await signUp(formData.email, formData.password);
-
-    if (error) {
-      toast({
-        title: "Authentication Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: isLogin ? "Login Successful!" : "Account Created!",
-        description: isLogin ? "Welcome back!" : "Please check your email to verify your account.",
-      });
-      onOpenChange(false);
-      setFormData({ email: '', password: '' });
-    }
-    setLoading(false);
   };
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    const { error } = await signInWithGoogle();
-    if (error) {
+    try {
+      const { error } = await signInWithGoogle();
+      if (!error) {
+        onOpenChange(false);
+      }
+    } catch (error: any) {
       toast({
         title: "Google Sign In Error",
-        description: error.message,
+        description: error.message || "Failed to sign in with Google",
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  const resetForm = () => {
+    setFormData({ email: '', password: '', name: '', phone: '', address: '', pincode: '' });
+  };
+
+  const toggleMode = () => {
+    setIsLogin(!isLogin);
+    resetForm();
   };
 
   return (
@@ -112,6 +176,19 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <div>
+                <Label htmlFor="name">Full Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="Enter your full name"
+                  required={!isLogin}
+                />
+              </div>
+            )}
+            
             <div>
               <Label htmlFor="email">Email *</Label>
               <Input
@@ -123,6 +200,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
                 required
               />
             </div>
+            
             <div>
               <Label htmlFor="password">Password *</Label>
               <div className="relative">
@@ -149,20 +227,54 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
                 </Button>
               </div>
             </div>
+
+            {!isLogin && (
+              <>
+                <div>
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => handleInputChange('address', e.target.value)}
+                    placeholder="Enter your address"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="pincode">Pincode</Label>
+                  <Input
+                    id="pincode"
+                    value={formData.pincode}
+                    onChange={(e) => handleInputChange('pincode', e.target.value)}
+                    placeholder="Enter your pincode"
+                  />
+                </div>
+              </>
+            )}
+            
             <Button 
               type="submit" 
               className="w-full bg-orange-600 hover:bg-orange-700"
               disabled={loading}
             >
-              {loading ? 'Loading...' : (isLogin ? 'Login' : 'Sign Up')}
+              {loading ? 'Processing...' : (isLogin ? 'Login' : 'Sign Up')}
             </Button>
           </form>
 
           <div className="text-center">
             <Button
               variant="link"
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={toggleMode}
               className="text-sm"
+              disabled={loading}
             >
               {isLogin ? "Don't have an account? Sign up" : "Already have an account? Login"}
             </Button>
