@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -125,31 +124,37 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
       const { error } = await signInWithGoogle();
       
       if (error) {
-        let errorMessage = "Failed to sign in with Google. ";
+        let errorMessage = "Google login is currently unavailable. ";
         
         if (error.message?.includes('provider is not enabled')) {
-          errorMessage += "Google OAuth is not configured properly. Please contact support.";
+          errorMessage = "Google login is not enabled. Please use email login or contact support.";
+        } else if (error.message?.includes('unauthorized_client')) {
+          errorMessage = "Google login configuration error. Please use email login or contact support.";
         } else {
-          errorMessage += error.message || "Please try again.";
+          errorMessage += "Please try email login instead.";
         }
         
         setError(errorMessage);
         
         toast({
-          title: "Google Sign In Error",
+          title: "Google Login Unavailable",
           description: errorMessage,
           variant: "destructive"
         });
       } else {
-        // Don't close dialog immediately for OAuth as it redirects
-        console.log('Google OAuth initiated, waiting for redirect...');
+        // Success case - OAuth will redirect automatically
+        console.log('Google OAuth initiated successfully');
+        toast({
+          title: "Redirecting...",
+          description: "Redirecting to Google for authentication",
+        });
       }
     } catch (error: any) {
-      const errorMessage = error.message || "Failed to sign in with Google";
+      const errorMessage = "Google login is currently unavailable. Please use email login.";
       setError(errorMessage);
       
       toast({
-        title: "Google Sign In Error",
+        title: "Google Login Error",
         description: errorMessage,
         variant: "destructive"
       });
@@ -195,7 +200,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
               <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            {formLoading ? 'Signing in...' : 'Continue with Google'}
+            {formLoading ? 'Connecting...' : 'Continue with Google'}
           </Button>
           
           <div className="relative">

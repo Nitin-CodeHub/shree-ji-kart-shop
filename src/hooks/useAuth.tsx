@@ -1,4 +1,3 @@
-
 import { useContext, createContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -245,10 +244,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       console.log('Attempting Google sign in...');
       
+      // Get current URL for proper redirect
+      const currentUrl = window.location.origin;
+      console.log('Current URL for redirect:', currentUrl);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: currentUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -259,13 +262,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) {
         console.error('Google sign in error:', error);
         
-        // More specific error messages for Google OAuth
+        // Specific error handling for Google OAuth
         let errorMessage = "Failed to sign in with Google. ";
         
         if (error.message.includes('provider is not enabled')) {
-          errorMessage += "Google OAuth is not configured. Please contact support.";
+          errorMessage = "Google login is not enabled. Please contact support or try email login.";
         } else if (error.message.includes('Invalid redirect URL')) {
-          errorMessage += "Invalid redirect URL configuration.";
+          errorMessage = "Google login configuration error. Please contact support.";
+        } else if (error.message.includes('unauthorized_client')) {
+          errorMessage = "Google OAuth client not properly configured. Please contact support.";
         } else {
           errorMessage += error.message;
         }
@@ -285,7 +290,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.error('Google sign in error:', error);
       toast({
         title: "Google Sign In Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: "An unexpected error occurred. Please try again or use email login.",
         variant: "destructive"
       });
       return { error };
