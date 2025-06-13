@@ -37,11 +37,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Clean up auth state function
   const cleanupAuthState = () => {
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        localStorage.removeItem(key);
-      }
-    });
+    try {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-') || key.startsWith('sb-')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      Object.keys(sessionStorage || {}).forEach((key) => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-') || key.startsWith('sb-')) {
+          sessionStorage.removeItem(key);
+        }
+      });
+    } catch (error) {
+      console.error('Error cleaning auth state:', error);
+    }
   };
 
   useEffect(() => {
@@ -50,23 +60,36 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+        console.log('Auth state changed:', event, session?.user?.email || 'no user');
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
 
         if (event === 'SIGNED_IN' && session?.user) {
+          console.log('User signed in successfully:', session.user.email);
+          
+          // Show success message
+          toast({
+            title: "Login Successful!",
+            description: `Welcome back, ${session.user.email}!`,
+          });
+
           // Defer profile creation/update to prevent deadlocks
           setTimeout(() => {
             ensureUserProfile(session.user);
-          }, 0);
+          }, 100);
+        }
+
+        if (event === 'SIGNED_OUT') {
+          console.log('User signed out');
+          cleanupAuthState();
         }
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.email);
+      console.log('Initial session check:', session?.user?.email || 'no session');
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -77,6 +100,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const ensureUserProfile = async (user: User) => {
     try {
+      console.log('Ensuring user profile for:', user.email);
+      
       // Check if profile exists
       const { data: profile, error: fetchError } = await supabase
         .from('profiles')
@@ -89,25 +114,47 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return;
       }
 
-      // If profile doesn't exist, it should be created by the trigger
-      // But let's update it with any available metadata
-      if (profile) {
+      // If profile doesn't exist, create it
+      if (!profile) {
+        console.log('Creating new profile for user');
         const metadata = user.user_metadata || {};
-        const shouldUpdate = !profile.name && metadata.name;
+        
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            name: metadata.name || metadata.full_name || user.email?.split('@')[0] || '',
+            phone: metadata.phone || '',
+            address: metadata.address || '',
+            pincode: metadata.pincode || ''
+          });
+
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+        } else {
+          console.log('Profile created successfully');
+        }
+      } else {
+        console.log('Profile already exists');
+        // Update profile with any new metadata
+        const metadata = user.user_metadata || {};
+        const shouldUpdate = !profile.name && (metadata.name || metadata.full_name);
 
         if (shouldUpdate) {
           const { error: updateError } = await supabase
             .from('profiles')
             .update({
               name: metadata.name || metadata.full_name || '',
-              phone: metadata.phone || '',
-              address: metadata.address || '',
-              pincode: metadata.pincode || ''
+              phone: metadata.phone || profile.phone || '',
+              address: metadata.address || profile.address || '',
+              pincode: metadata.pincode || profile.pincode || ''
             })
             .eq('id', user.id);
 
           if (updateError) {
             console.error('Error updating profile:', updateError);
+          } else {
+            console.log('Profile updated successfully');
           }
         }
       }
@@ -118,7 +165,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signUp = async (email: string, password: string, userData?: any) => {
     try {
+      setLoading(true);
       cleanupAuthState();
+      
+      console.log('Attempting to sign up user:', email);
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -130,8 +180,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       if (error) {
+        console.error('Sign up error:', error);
         return { error };
       }
+
+      console.log('Sign up successful:', data.user?.email);
 
       if (data.user && !data.user.email_confirmed_at) {
         toast({
@@ -142,13 +195,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       return { error: null };
     } catch (error) {
+      console.error('Sign up error:', error);
       return { error };
+    } finally {
+      setLoading(false);
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
+      setLoading(true);
       cleanupAuthState();
+      
+      console.log('Attempting to sign in user:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -156,8 +215,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       if (error) {
+        console.error('Sign in error:', error);
         return { error };
       }
+
+      console.log('Sign in successful:', data.user?.email);
 
       if (data.user && !data.user.email_confirmed_at) {
         toast({
@@ -169,13 +231,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       return { error: null };
     } catch (error) {
+      console.error('Sign in error:', error);
       return { error };
+    } finally {
+      setLoading(false);
     }
   };
 
   const signInWithGoogle = async () => {
     try {
+      setLoading(true);
       cleanupAuthState();
+      
+      console.log('Attempting Google sign in...');
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -190,28 +258,65 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (error) {
         console.error('Google sign in error:', error);
+        
+        // More specific error messages for Google OAuth
+        let errorMessage = "Failed to sign in with Google. ";
+        
+        if (error.message.includes('provider is not enabled')) {
+          errorMessage += "Google OAuth is not configured. Please contact support.";
+        } else if (error.message.includes('Invalid redirect URL')) {
+          errorMessage += "Invalid redirect URL configuration.";
+        } else {
+          errorMessage += error.message;
+        }
+
         toast({
           title: "Google Sign In Error",
-          description: "Failed to sign in with Google. Please check your configuration.",
+          description: errorMessage,
           variant: "destructive"
         });
+        
+        return { error };
       }
 
-      return { error };
+      console.log('Google OAuth initiated successfully');
+      return { error: null };
     } catch (error) {
       console.error('Google sign in error:', error);
+      toast({
+        title: "Google Sign In Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
       return { error };
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
+      setLoading(true);
+      console.log('Signing out user...');
+      
       cleanupAuthState();
       await supabase.auth.signOut({ scope: 'global' });
-      window.location.href = '/';
+      
+      toast({
+        title: "Signed Out",
+        description: "You have been successfully signed out.",
+      });
+      
+      // Force page reload for clean state
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
     } catch (error) {
       console.error('Sign out error:', error);
+      // Force reload even if sign out fails
       window.location.href = '/';
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -219,15 +324,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (!user) return { error: new Error('No user logged in') };
 
     try {
+      console.log('Updating profile for user:', user.email);
+      
       const { error } = await supabase
         .from('profiles')
         .update(userData)
         .eq('id', user.id);
 
       if (error) {
+        console.error('Profile update error:', error);
         return { error };
       }
 
+      console.log('Profile updated successfully');
+      
       toast({
         title: "Profile Updated",
         description: "Your profile has been updated successfully.",
@@ -235,6 +345,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       return { error: null };
     } catch (error) {
+      console.error('Profile update error:', error);
       return { error };
     }
   };
