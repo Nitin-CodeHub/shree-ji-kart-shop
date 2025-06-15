@@ -1,3 +1,4 @@
+
 import { useContext, createContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -244,14 +245,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       console.log('Attempting Google sign in...');
       
-      // Get current URL for proper redirect
-      const currentUrl = window.location.origin;
-      console.log('Current URL for redirect:', currentUrl);
+      // Use the exact redirect URL that should be configured in Supabase
+      const redirectUrl = `${window.location.origin}/`;
+      console.log('Redirect URL:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: currentUrl,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -262,13 +263,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) {
         console.error('Google sign in error:', error);
         
-        // Specific error handling for Google OAuth
-        let errorMessage = "Failed to sign in with Google. ";
+        // Handle 404 and other common Google OAuth errors
+        let errorMessage = "Google login failed. ";
         
-        if (error.message.includes('provider is not enabled')) {
+        if (error.message.includes('404') || error.message.includes('not found')) {
+          errorMessage = "Google login configuration error. Please contact support to fix the redirect URLs.";
+        } else if (error.message.includes('provider is not enabled')) {
           errorMessage = "Google login is not enabled. Please contact support or try email login.";
         } else if (error.message.includes('Invalid redirect URL')) {
-          errorMessage = "Google login configuration error. Please contact support.";
+          errorMessage = "Invalid redirect URL. Please contact support to fix the configuration.";
         } else if (error.message.includes('unauthorized_client')) {
           errorMessage = "Google OAuth client not properly configured. Please contact support.";
         } else {
@@ -276,7 +279,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
 
         toast({
-          title: "Google Sign In Error",
+          title: "Google Login Error",
           description: errorMessage,
           variant: "destructive"
         });
@@ -289,8 +292,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error) {
       console.error('Google sign in error:', error);
       toast({
-        title: "Google Sign In Error",
-        description: "An unexpected error occurred. Please try again or use email login.",
+        title: "Google Login Error",
+        description: "An unexpected error occurred. Please try email login instead.",
         variant: "destructive"
       });
       return { error };
