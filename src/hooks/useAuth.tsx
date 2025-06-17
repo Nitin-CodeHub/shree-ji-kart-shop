@@ -1,4 +1,5 @@
 
+
 import { useContext, createContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -68,10 +69,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in successfully:', session.user.email);
           
+          // Get user's display name for toast
+          const displayName = getUserDisplayName(session.user);
+          
           // Show success message
           toast({
             title: "Login Successful!",
-            description: `Welcome back, ${session.user.email}!`,
+            description: `Welcome back, ${displayName}!`,
           });
 
           // Defer profile creation/update to prevent deadlocks
@@ -98,9 +102,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Helper function to get user's display name
+  const getUserDisplayName = (user: User) => {
+    const metadata = user.user_metadata || {};
+    return metadata.full_name || metadata.name || user.email?.split('@')[0] || 'User';
+  };
+
   const ensureUserProfile = async (user: User) => {
     try {
       console.log('Ensuring user profile for:', user.email);
+      console.log('User metadata:', user.user_metadata);
       
       // Check if profile exists
       const { data: profile, error: fetchError } = await supabase
@@ -114,16 +125,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return;
       }
 
+      const metadata = user.user_metadata || {};
+      
       // If profile doesn't exist, create it
       if (!profile) {
         console.log('Creating new profile for user');
-        const metadata = user.user_metadata || {};
         
         const { error: insertError } = await supabase
           .from('profiles')
           .insert({
             id: user.id,
-            name: metadata.name || metadata.full_name || user.email?.split('@')[0] || '',
+            name: metadata.full_name || metadata.name || user.email?.split('@')[0] || '',
             phone: metadata.phone || '',
             address: metadata.address || '',
             pincode: metadata.pincode || ''
@@ -132,19 +144,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         if (insertError) {
           console.error('Error creating profile:', insertError);
         } else {
-          console.log('Profile created successfully');
+          console.log('Profile created successfully with name:', metadata.full_name || metadata.name);
         }
       } else {
-        console.log('Profile already exists');
-        // Update profile with any new metadata
-        const metadata = user.user_metadata || {};
-        const shouldUpdate = !profile.name && (metadata.name || metadata.full_name);
+        console.log('Profile already exists:', profile.name);
+        
+        // Update profile with Google metadata if name is missing or different
+        const shouldUpdate = !profile.name || 
+          (metadata.full_name && profile.name !== metadata.full_name) ||
+          (metadata.name && profile.name !== metadata.name);
 
         if (shouldUpdate) {
+          const updatedName = metadata.full_name || metadata.name || profile.name || user.email?.split('@')[0] || '';
+          
           const { error: updateError } = await supabase
             .from('profiles')
             .update({
-              name: metadata.name || metadata.full_name || '',
+              name: updatedName,
               phone: metadata.phone || profile.phone || '',
               address: metadata.address || profile.address || '',
               pincode: metadata.pincode || profile.pincode || ''
@@ -154,7 +170,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           if (updateError) {
             console.error('Error updating profile:', updateError);
           } else {
-            console.log('Profile updated successfully');
+            console.log('Profile updated successfully with name:', updatedName);
           }
         }
       }
@@ -373,3 +389,4 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     </AuthContext.Provider>
   );
 };
+

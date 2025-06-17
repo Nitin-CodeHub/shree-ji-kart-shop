@@ -36,6 +36,13 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const itemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
+  // Helper function to get user's display name
+  const getUserDisplayName = () => {
+    if (!user) return '';
+    const metadata = user.user_metadata || {};
+    return metadata.full_name || metadata.name || user.email?.split('@')[0] || 'User';
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Searching for:', searchQuery);
@@ -106,7 +113,7 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
                   <div className="border-b pb-4">
                     {user ? (
                       <div className="space-y-2">
-                        <p className="text-sm font-medium">Welcome, {user.email}!</p>
+                        <p className="text-sm font-medium">Welcome, {getUserDisplayName()}!</p>
                         <Button 
                           variant="outline" 
                           size="sm" 
@@ -188,7 +195,7 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center space-x-2">
                       <User className="h-4 w-4" />
-                      <span>{user.email}</span>
+                      <span>{getUserDisplayName()}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-white">
