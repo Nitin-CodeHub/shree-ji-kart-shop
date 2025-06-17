@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ interface AuthDialogProps {
 }
 
 const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
-  const { signIn, signUp, signInWithGoogle, loading } = useAuth();
+  const { signIn, signUp, loading } = useAuth();
   const { toast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -39,12 +40,12 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
 
   const validateForm = () => {
     if (!formData.email || !formData.password) {
-      setError("Please fill email and password");
+      setError("कृपया email और password भरें");
       return false;
     }
 
     if (!isLogin && !formData.name) {
-      setError("Please fill your name for registration");
+      setError("कृपया registration के लिए अपना नाम भरें");
       return false;
     }
 
@@ -71,17 +72,17 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
       if (error) {
         let errorMessage = error.message;
         
-        // Handle specific error cases
+        // Handle specific error cases in Hindi
         if (error.message?.includes('Email not confirmed')) {
-          errorMessage = 'Please check your email and click the verification link before signing in.';
+          errorMessage = 'कृपया अपना email check करें और verification link पर click करें।';
         } else if (error.message?.includes('Invalid login credentials')) {
-          errorMessage = 'Invalid email or password. Please check your credentials.';
+          errorMessage = 'गलत email या password। कृपया अपनी जानकारी check करें।';
         } else if (error.message?.includes('User already registered')) {
-          errorMessage = 'An account with this email already exists. Try signing in instead.';
+          errorMessage = 'इस email का account पहले से है। कृपया login करें।';
         } else if (error.message?.includes('Invalid email')) {
-          errorMessage = 'Please enter a valid email address.';
+          errorMessage = 'कृपया सही email address भरें।';
         } else if (error.message?.includes('Password should be at least')) {
-          errorMessage = 'Password should be at least 6 characters long.';
+          errorMessage = 'Password कम से कम 6 characters का होना चाहिए।';
         }
 
         setError(errorMessage);
@@ -94,8 +95,8 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
       } else {
         if (!isLogin) {
           toast({
-            title: "Account Created!",
-            description: "Please check your email to verify your account before signing in.",
+            title: "Account बन गया!",
+            description: "कृपया अपना email check करें और account verify करें।",
           });
         }
         onOpenChange(false);
@@ -103,58 +104,10 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
         setError('');
       }
     } catch (error: any) {
-      const errorMessage = error.message || "An unexpected error occurred";
+      const errorMessage = error.message || "कोई समस्या हुई है";
       setError(errorMessage);
       toast({
         title: "Error",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setFormLoading(true);
-    setError('');
-    
-    try {
-      console.log('Google sign in button clicked');
-      const { error } = await signInWithGoogle();
-      
-      if (error) {
-        let errorMessage = "Google login is currently unavailable. ";
-        
-        if (error.message?.includes('provider is not enabled')) {
-          errorMessage = "Google login is not enabled. Please use email login or contact support.";
-        } else if (error.message?.includes('unauthorized_client')) {
-          errorMessage = "Google login configuration error. Please use email login or contact support.";
-        } else {
-          errorMessage += "Please try email login instead.";
-        }
-        
-        setError(errorMessage);
-        
-        toast({
-          title: "Google Login Unavailable",
-          description: errorMessage,
-          variant: "destructive"
-        });
-      } else {
-        // Success case - OAuth will redirect automatically
-        console.log('Google OAuth initiated successfully');
-        toast({
-          title: "Redirecting...",
-          description: "Redirecting to Google for authentication",
-        });
-      }
-    } catch (error: any) {
-      const errorMessage = "Google login is currently unavailable. Please use email login.";
-      setError(errorMessage);
-      
-      toast({
-        title: "Google Login Error",
         description: errorMessage,
         variant: "destructive"
       });
@@ -188,39 +141,32 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
             </Alert>
           )}
           
-          <Button 
-            onClick={handleGoogleSignIn}
-            disabled={formLoading || loading}
-            variant="outline"
-            className="w-full"
-          >
-            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            {formLoading ? 'Connecting...' : 'Continue with Google'}
-          </Button>
+          {/* Google Login Disabled Notice */}
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Google login अभी उपलब्ध नहीं है। कृपया email और password का उपयोग करें।
+            </AlertDescription>
+          </Alert>
           
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or</span>
+              <span className="bg-background px-2 text-muted-foreground">Email से Login करें</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <Label htmlFor="name">Full Name *</Label>
+                <Label htmlFor="name">पूरा नाम *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="Enter your full name"
+                  placeholder="अपना पूरा नाम भरें"
                   required={!isLogin}
                   disabled={formLoading || loading}
                 />
@@ -234,7 +180,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="Enter your email"
+                placeholder="अपना email भरें"
                 required
                 disabled={formLoading || loading}
               />
@@ -248,7 +194,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="अपना password भरें"
                   required
                   disabled={formLoading || loading}
                 />
@@ -277,7 +223,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder="Enter your phone number"
+                    placeholder="अपना phone number भरें"
                     disabled={formLoading || loading}
                   />
                 </div>
@@ -287,7 +233,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
                     id="address"
                     value={formData.address}
                     onChange={(e) => handleInputChange('address', e.target.value)}
-                    placeholder="Enter your address"
+                    placeholder="अपना address भरें"
                     disabled={formLoading || loading}
                   />
                 </div>
@@ -297,7 +243,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
                     id="pincode"
                     value={formData.pincode}
                     onChange={(e) => handleInputChange('pincode', e.target.value)}
-                    placeholder="Enter your pincode"
+                    placeholder="अपना pincode भरें"
                     disabled={formLoading || loading}
                   />
                 </div>
@@ -309,7 +255,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
               className="w-full bg-orange-600 hover:bg-orange-700"
               disabled={formLoading || loading}
             >
-              {formLoading ? 'Processing...' : (isLogin ? 'Login' : 'Sign Up')}
+              {formLoading ? 'Process हो रहा है...' : (isLogin ? 'Login करें' : 'Sign Up करें')}
             </Button>
           </form>
 
@@ -320,7 +266,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
               className="text-sm"
               disabled={formLoading || loading}
             >
-              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Login"}
+              {isLogin ? "Account नहीं है? Sign up करें" : "पहले से account है? Login करें"}
             </Button>
           </div>
         </div>
