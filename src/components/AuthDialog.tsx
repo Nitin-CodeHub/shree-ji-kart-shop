@@ -15,7 +15,7 @@ interface AuthDialogProps {
 }
 
 const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
-  const { signIn, signUp, loading } = useAuth();
+  const { signIn, signUp, signInWithGoogle, loading } = useAuth();
   const { toast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -116,6 +116,48 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setFormLoading(true);
+    setError('');
+    
+    try {
+      const { error } = await signInWithGoogle();
+      
+      if (error) {
+        let errorMessage = "Google login में समस्या हुई।";
+        
+        if (error.message.includes('404') || error.message.includes('not found')) {
+          errorMessage = "Google login configuration में समस्या है। कृपया email login का use करें।";
+        } else if (error.message.includes('provider is not enabled')) {
+          errorMessage = "Google login enable नहीं है। कृपया email login का use करें।";
+        }
+        
+        setError(errorMessage);
+        toast({
+          title: "Google Login Error",
+          description: errorMessage,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Google Login Successful!",
+          description: "आप successfully login हो गए।",
+        });
+        onOpenChange(false);
+      }
+    } catch (error: any) {
+      const errorMessage = "Google login में समस्या हुई। कृपया email login का use करें।";
+      setError(errorMessage);
+      toast({
+        title: "Google Login Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({ email: '', password: '', name: '', phone: '', address: '', pincode: '' });
     setError('');
@@ -141,20 +183,21 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
             </Alert>
           )}
           
-          {/* Google Login Disabled Notice */}
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Google login अभी उपलब्ध नहीं है। कृपया email और password का उपयोग करें।
-            </AlertDescription>
-          </Alert>
+          {/* Google Login Button */}
+          <Button
+            onClick={handleGoogleSignIn}
+            disabled={formLoading || loading}
+            className="w-full bg-red-600 hover:bg-red-700 text-white"
+          >
+            {formLoading ? 'Process हो रहा है...' : 'Google से Login करें'}
+          </Button>
           
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Email से Login करें</span>
+              <span className="bg-background px-2 text-muted-foreground">या Email से Login करें</span>
             </div>
           </div>
 
