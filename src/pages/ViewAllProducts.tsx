@@ -20,8 +20,8 @@ const sampleProducts: Product[] = [
   {
     id: 1,
     name: "Fresh Basmati Rice",
-    price: 120,
-    originalPrice: 150,
+    price: 100,
+    originalPrice: 120,
     image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
     category: "Groceries",
     unit: "kg"
@@ -55,8 +55,8 @@ const sampleProducts: Product[] = [
   {
     id: 7,
     name: "Potato Chips",
-    price: 45,
-    originalPrice: 55,
+    price: 5,
+    originalPrice: 5,
     image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
     category: "Snacks",
     unit: "pack"
@@ -64,8 +64,8 @@ const sampleProducts: Product[] = [
   {
     id: 8,
     name: "Body Lotion",
-    price: 250,
-    originalPrice: 300,
+    price: 150,
+    originalPrice: 200,
     image: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
     category: "Body Care",
     unit: "bottle"
@@ -81,7 +81,7 @@ const sampleProducts: Product[] = [
   {
     id: 10,
     name: "Face Wash",
-    price: 180,
+    price: 150,
     image: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
     category: "Body Care",
     unit: "tube"
@@ -89,7 +89,7 @@ const sampleProducts: Product[] = [
   {
     id: 11,
     name: "Wheat Flour",
-    price: 55,
+    price: 40,
     originalPrice: 65,
     image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
     category: "Groceries",
@@ -99,7 +99,7 @@ const sampleProducts: Product[] = [
     id: 12,
     name: "Green Chillies",
     price: 25,
-    image: "https://images.unsplash.com/photo-1583049254548-c5b8c7e84491?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    image: "https://images.unsplash.com/chillies.photo-1583049254548-c5b8c7e84491?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
     category: "Vegetables",
     unit: "250g"
   },
