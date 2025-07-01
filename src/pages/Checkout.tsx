@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrders } from '@/hooks/useOrders';
+import { useLocation } from '@/hooks/useLocation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,11 +13,13 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, CreditCard, Truck, Smartphone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import UpiPayment from '@/components/UpiPayment';
+import LocationTracker from '@/components/LocationTracker';
 
 const Checkout = () => {
   const { cart, getTotalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const { addOrder } = useOrders();
+  const { location } = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -37,17 +41,41 @@ const Checkout = () => {
       setCustomerInfo({
         name: user.email || '',
         phone: '',
-        address: '',
+        address: location?.address || '',
         pincode: ''
       });
     }
-  }, [user]);
+  }, [user, location]);
+
+  // Auto-fill location data when available
+  useEffect(() => {
+    if (location && location.address) {
+      setCustomerInfo(prev => ({
+        ...prev,
+        address: location.address || prev.address
+      }));
+    }
+  }, [location]);
 
   const handleInputChange = (field: string, value: string) => {
     setCustomerInfo(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleLocationUpdate = (locationData: any) => {
+    if (locationData.address) {
+      setCustomerInfo(prev => ({
+        ...prev,
+        address: locationData.address
+      }));
+      
+      toast({
+        title: "Location Updated",
+        description: "Address automatically filled from your location",
+      });
+    }
   };
 
   const handlePlaceOrder = async () => {
@@ -97,13 +125,23 @@ const Checkout = () => {
     
     const order = {
       items: [...cart],
-      customer: { ...customerInfo },
+      customer: { 
+        ...customerInfo,
+        // Include location data if available
+        location: location ? {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          accuracy: location.accuracy
+        } : null
+      },
       paymentMethod,
       total: getTotalPrice(),
       status,
     };
 
     try {
+      console.log('Processing order with location data:', order);
+      
       await addOrder(order);
       clearCart();
       setIsProcessing(false);
@@ -117,6 +155,7 @@ const Checkout = () => {
       navigate('/orders');
     } catch (error) {
       setIsProcessing(false);
+      console.error('Order processing error:', error);
       toast({
         title: "Error",
         description: "Failed to place order. Please try again.",
@@ -176,6 +215,9 @@ const Checkout = () => {
         <div className="grid md:grid-cols-2 gap-8">
           {/* Customer Information */}
           <div className="space-y-6">
+            {/* Location Tracker */}
+            <LocationTracker onLocationUpdate={handleLocationUpdate} />
+
             <Card>
               <CardHeader>
                 <CardTitle>
@@ -214,9 +256,14 @@ const Checkout = () => {
                     id="address"
                     value={customerInfo.address}
                     onChange={(e) => handleInputChange('address', e.target.value)}
-                    placeholder="Enter your complete address"
+                    placeholder={location ? "Address auto-filled from location" : "Enter your complete address"}
                     required
                   />
+                  {location && (
+                    <p className="text-xs text-green-600 mt-1">
+                      ✓ Address auto-filled from your location
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="pincode">Pincode *</Label>
@@ -336,6 +383,22 @@ const Checkout = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Location Info Display */}
+            {location && (
+              <Card className="mt-4">
+                <CardHeader>
+                  <CardTitle className="text-sm">Delivery Location Details</CardTitle>
+                </CardHeader>
+                <CardContent className="text-xs text-gray-600">
+                  <p>Coordinates: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</p>
+                  {location.accuracy && (
+                    <p>Location Accuracy: ~{Math.round(location.accuracy)} meters</p>
+                  )}
+                  <p className="text-green-600 mt-1">✓ Location captured for accurate delivery</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
