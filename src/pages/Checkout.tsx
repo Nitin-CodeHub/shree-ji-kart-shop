@@ -4,22 +4,18 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrders } from '@/hooks/useOrders';
-import { useLocation } from '@/hooks/useLocation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, CreditCard, Truck, Smartphone } from 'lucide-react';
+import { ArrowLeft, CreditCard, Truck, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import UpiPayment from '@/components/UpiPayment';
-import LocationTracker from '@/components/LocationTracker';
 
 const Checkout = () => {
   const { cart, getTotalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const { addOrder } = useOrders();
-  const { location } = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -32,30 +28,20 @@ const Checkout = () => {
   
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod'>('upi');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showUpiPayment, setShowUpiPayment] = useState(false);
-  const [currentOrderId, setCurrentOrderId] = useState('');
+  const [showPaymentDetails, setShowPaymentDetails] = useState(false);
 
   // Load user details if logged in
   useEffect(() => {
     if (user) {
+      // You can fetch user profile data here if needed
       setCustomerInfo({
         name: user.email || '',
         phone: '',
-        address: location?.address || '',
+        address: '',
         pincode: ''
       });
     }
-  }, [user, location]);
-
-  // Auto-fill location data when available
-  useEffect(() => {
-    if (location && location.address) {
-      setCustomerInfo(prev => ({
-        ...prev,
-        address: location.address || prev.address
-      }));
-    }
-  }, [location]);
+  }, [user]);
 
   const handleInputChange = (field: string, value: string) => {
     setCustomerInfo(prev => ({
@@ -64,18 +50,14 @@ const Checkout = () => {
     }));
   };
 
-  const handleLocationUpdate = (locationData: any) => {
-    if (locationData.address) {
-      setCustomerInfo(prev => ({
-        ...prev,
-        address: locationData.address
-      }));
-      
-      toast({
-        title: "Location Updated",
-        description: "Address automatically filled from your location",
-      });
-    }
+  const upiId = "9691565650@paytm";
+
+  const copyUpiId = () => {
+    navigator.clipboard.writeText(upiId);
+    toast({
+      title: "UPI ID Copied",
+      description: "UPI ID has been copied to clipboard",
+    });
   };
 
   const handlePlaceOrder = async () => {
@@ -109,53 +91,38 @@ const Checkout = () => {
     }
 
     if (paymentMethod === 'upi') {
-      // Generate order ID and show UPI payment
-      const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      setCurrentOrderId(orderId);
-      setShowUpiPayment(true);
+      setShowPaymentDetails(true);
+      toast({
+        title: "Payment Instructions",
+        description: "Please complete the UPI payment and then confirm your order",
+      });
       return;
     }
 
-    // Handle COD orders
-    await processOrder('pending');
-  };
-
-  const processOrder = async (status: 'pending' | 'confirmed') => {
     setIsProcessing(true);
     
+    // Create order
     const order = {
       items: [...cart],
-      customer: { 
-        ...customerInfo,
-        // Include location data if available
-        location: location ? {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          accuracy: location.accuracy
-        } : null
-      },
+      customer: { ...customerInfo },
       paymentMethod,
       total: getTotalPrice(),
-      status,
+      status: 'pending' as const,
     };
 
     try {
-      console.log('Processing order with location data:', order);
-      
       await addOrder(order);
       clearCart();
       setIsProcessing(false);
-      setShowUpiPayment(false);
       
       toast({
         title: "Order Placed Successfully!",
-        description: `Your order has been ${status === 'confirmed' ? 'confirmed' : 'placed'}. ${paymentMethod === 'cod' ? 'You will pay on delivery.' : 'Payment received.'}`,
+        description: `Your order will be delivered soon. Payment method: ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'UPI'}`,
       });
 
       navigate('/orders');
     } catch (error) {
       setIsProcessing(false);
-      console.error('Order processing error:', error);
       toast({
         title: "Error",
         description: "Failed to place order. Please try again.",
@@ -164,8 +131,39 @@ const Checkout = () => {
     }
   };
 
-  const handleUpiPaymentSuccess = async () => {
-    await processOrder('confirmed');
+  const confirmUpiPayment = async () => {
+    if (!user) return;
+
+    setIsProcessing(true);
+    
+    const order = {
+      items: [...cart],
+      customer: { ...customerInfo },
+      paymentMethod,
+      total: getTotalPrice(),
+      status: 'confirmed' as const,
+    };
+
+    try {
+      await addOrder(order);
+      clearCart();
+      setIsProcessing(false);
+      setShowPaymentDetails(false);
+      
+      toast({
+        title: "Payment Confirmed!",
+        description: "Your order has been placed successfully",
+      });
+
+      navigate('/orders');
+    } catch (error) {
+      setIsProcessing(false);
+      toast({
+        title: "Error",
+        description: "Failed to confirm payment. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (cart.length === 0) {
@@ -180,23 +178,63 @@ const Checkout = () => {
     );
   }
 
-  if (showUpiPayment) {
+  if (showPaymentDetails) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center mb-6">
-          <Button variant="ghost" onClick={() => setShowUpiPayment(false)} className="mr-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Checkout
-          </Button>
-          <h1 className="text-3xl font-bold">UPI Payment</h1>
+        <div className="max-w-md mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle>Complete UPI Payment</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center">
+                <p className="text-lg font-medium mb-2">Amount to Pay</p>
+                <p className="text-3xl font-bold text-orange-600">₹{getTotalPrice().toFixed(2)}</p>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <p className="font-medium mb-2">Pay to UPI ID:</p>
+                <div className="flex items-center justify-between bg-gray-100 p-3 rounded">
+                  <span className="font-mono">{upiId}</span>
+                  <Button size="sm" variant="outline" onClick={copyUpiId}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  1. Open your UPI app (PhonePe, Google Pay, Paytm, etc.)
+                </p>
+                <p className="text-sm text-gray-600">
+                  2. Send ₹{getTotalPrice().toFixed(2)} to {upiId}
+                </p>
+                <p className="text-sm text-gray-600">
+                  3. Click "Payment Completed" below after successful payment
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Button 
+                  onClick={confirmUpiPayment}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Processing...' : 'Payment Completed'}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setShowPaymentDetails(false)}
+                >
+                  Back to Order
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-        
-        <UpiPayment
-          amount={getTotalPrice()}
-          orderId={currentOrderId}
-          onPaymentSuccess={handleUpiPaymentSuccess}
-          onBack={() => setShowUpiPayment(false)}
-        />
       </div>
     );
   }
@@ -215,9 +253,6 @@ const Checkout = () => {
         <div className="grid md:grid-cols-2 gap-8">
           {/* Customer Information */}
           <div className="space-y-6">
-            {/* Location Tracker */}
-            <LocationTracker onLocationUpdate={handleLocationUpdate} />
-
             <Card>
               <CardHeader>
                 <CardTitle>
@@ -256,14 +291,9 @@ const Checkout = () => {
                     id="address"
                     value={customerInfo.address}
                     onChange={(e) => handleInputChange('address', e.target.value)}
-                    placeholder={location ? "Address auto-filled from location" : "Enter your complete address"}
+                    placeholder="Enter your complete address"
                     required
                   />
-                  {location && (
-                    <p className="text-xs text-green-600 mt-1">
-                      ✓ Address auto-filled from your location
-                    </p>
-                  )}
                 </div>
                 <div>
                   <Label htmlFor="pincode">Pincode *</Label>
@@ -300,10 +330,10 @@ const Checkout = () => {
                         onChange={() => setPaymentMethod('upi')}
                         className="text-orange-600"
                       />
-                      <Smartphone className="h-5 w-5" />
+                      <CreditCard className="h-5 w-5" />
                       <div>
                         <div className="font-medium">UPI Payment</div>
-                        <div className="text-sm text-gray-600">PhonePe, Google Pay, Paytm & more</div>
+                        <div className="text-sm text-gray-600">Pay using UPI: {upiId}</div>
                       </div>
                     </div>
                   </div>
@@ -366,7 +396,7 @@ const Checkout = () => {
 
                   <div className="text-sm text-gray-600">
                     {paymentMethod === 'upi' && (
-                      <p>Pay instantly using UPI apps like PhonePe, Google Pay, Paytm</p>
+                      <p>You will be redirected to complete UPI payment</p>
                     )}
                     {paymentMethod === 'cod' && (
                       <p>You will pay ₹{getTotalPrice().toFixed(2)} on delivery</p>
@@ -378,27 +408,11 @@ const Checkout = () => {
                     className="w-full bg-orange-600 hover:bg-orange-700"
                     disabled={isProcessing}
                   >
-                    {isProcessing ? 'Processing...' : paymentMethod === 'upi' ? 'Pay with UPI' : 'Place Order'}
+                    {isProcessing ? 'Processing...' : paymentMethod === 'upi' ? 'Proceed to Payment' : 'Place Order'}
                   </Button>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Location Info Display */}
-            {location && (
-              <Card className="mt-4">
-                <CardHeader>
-                  <CardTitle className="text-sm">Delivery Location Details</CardTitle>
-                </CardHeader>
-                <CardContent className="text-xs text-gray-600">
-                  <p>Coordinates: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</p>
-                  {location.accuracy && (
-                    <p>Location Accuracy: ~{Math.round(location.accuracy)} meters</p>
-                  )}
-                  <p className="text-green-600 mt-1">✓ Location captured for accurate delivery</p>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
       </div>
