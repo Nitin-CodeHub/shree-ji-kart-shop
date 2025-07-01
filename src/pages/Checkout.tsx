@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
@@ -9,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, CreditCard, Truck, Copy } from 'lucide-react';
+import { ArrowLeft, CreditCard, Truck, Smartphone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import UpiPayment from '@/components/UpiPayment';
 
 const Checkout = () => {
   const { cart, getTotalPrice, clearCart } = useCart();
@@ -28,12 +28,12 @@ const Checkout = () => {
   
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod'>('upi');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showPaymentDetails, setShowPaymentDetails] = useState(false);
+  const [showUpiPayment, setShowUpiPayment] = useState(false);
+  const [currentOrderId, setCurrentOrderId] = useState('');
 
   // Load user details if logged in
   useEffect(() => {
     if (user) {
-      // You can fetch user profile data here if needed
       setCustomerInfo({
         name: user.email || '',
         phone: '',
@@ -48,16 +48,6 @@ const Checkout = () => {
       ...prev,
       [field]: value
     }));
-  };
-
-  const upiId = "9691565650@paytm";
-
-  const copyUpiId = () => {
-    navigator.clipboard.writeText(upiId);
-    toast({
-      title: "UPI ID Copied",
-      description: "UPI ID has been copied to clipboard",
-    });
   };
 
   const handlePlaceOrder = async () => {
@@ -91,33 +81,37 @@ const Checkout = () => {
     }
 
     if (paymentMethod === 'upi') {
-      setShowPaymentDetails(true);
-      toast({
-        title: "Payment Instructions",
-        description: "Please complete the UPI payment and then confirm your order",
-      });
+      // Generate order ID and show UPI payment
+      const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      setCurrentOrderId(orderId);
+      setShowUpiPayment(true);
       return;
     }
 
+    // Handle COD orders
+    await processOrder('pending');
+  };
+
+  const processOrder = async (status: 'pending' | 'confirmed') => {
     setIsProcessing(true);
     
-    // Create order
     const order = {
       items: [...cart],
       customer: { ...customerInfo },
       paymentMethod,
       total: getTotalPrice(),
-      status: 'pending' as const,
+      status,
     };
 
     try {
       await addOrder(order);
       clearCart();
       setIsProcessing(false);
+      setShowUpiPayment(false);
       
       toast({
         title: "Order Placed Successfully!",
-        description: `Your order will be delivered soon. Payment method: ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'UPI'}`,
+        description: `Your order has been ${status === 'confirmed' ? 'confirmed' : 'placed'}. ${paymentMethod === 'cod' ? 'You will pay on delivery.' : 'Payment received.'}`,
       });
 
       navigate('/orders');
@@ -131,39 +125,8 @@ const Checkout = () => {
     }
   };
 
-  const confirmUpiPayment = async () => {
-    if (!user) return;
-
-    setIsProcessing(true);
-    
-    const order = {
-      items: [...cart],
-      customer: { ...customerInfo },
-      paymentMethod,
-      total: getTotalPrice(),
-      status: 'confirmed' as const,
-    };
-
-    try {
-      await addOrder(order);
-      clearCart();
-      setIsProcessing(false);
-      setShowPaymentDetails(false);
-      
-      toast({
-        title: "Payment Confirmed!",
-        description: "Your order has been placed successfully",
-      });
-
-      navigate('/orders');
-    } catch (error) {
-      setIsProcessing(false);
-      toast({
-        title: "Error",
-        description: "Failed to confirm payment. Please try again.",
-        variant: "destructive"
-      });
-    }
+  const handleUpiPaymentSuccess = async () => {
+    await processOrder('confirmed');
   };
 
   if (cart.length === 0) {
@@ -178,63 +141,23 @@ const Checkout = () => {
     );
   }
 
-  if (showPaymentDetails) {
+  if (showUpiPayment) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-md mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle>Complete UPI Payment</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center">
-                <p className="text-lg font-medium mb-2">Amount to Pay</p>
-                <p className="text-3xl font-bold text-orange-600">₹{getTotalPrice().toFixed(2)}</p>
-              </div>
-              
-              <Separator />
-              
-              <div>
-                <p className="font-medium mb-2">Pay to UPI ID:</p>
-                <div className="flex items-center justify-between bg-gray-100 p-3 rounded">
-                  <span className="font-mono">{upiId}</span>
-                  <Button size="sm" variant="outline" onClick={copyUpiId}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">
-                  1. Open your UPI app (PhonePe, Google Pay, Paytm, etc.)
-                </p>
-                <p className="text-sm text-gray-600">
-                  2. Send ₹{getTotalPrice().toFixed(2)} to {upiId}
-                </p>
-                <p className="text-sm text-gray-600">
-                  3. Click "Payment Completed" below after successful payment
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <Button 
-                  onClick={confirmUpiPayment}
-                  className="w-full bg-green-600 hover:bg-green-700"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? 'Processing...' : 'Payment Completed'}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => setShowPaymentDetails(false)}
-                >
-                  Back to Order
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="flex items-center mb-6">
+          <Button variant="ghost" onClick={() => setShowUpiPayment(false)} className="mr-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Checkout
+          </Button>
+          <h1 className="text-3xl font-bold">UPI Payment</h1>
         </div>
+        
+        <UpiPayment
+          amount={getTotalPrice()}
+          orderId={currentOrderId}
+          onPaymentSuccess={handleUpiPaymentSuccess}
+          onBack={() => setShowUpiPayment(false)}
+        />
       </div>
     );
   }
@@ -330,10 +253,10 @@ const Checkout = () => {
                         onChange={() => setPaymentMethod('upi')}
                         className="text-orange-600"
                       />
-                      <CreditCard className="h-5 w-5" />
+                      <Smartphone className="h-5 w-5" />
                       <div>
                         <div className="font-medium">UPI Payment</div>
-                        <div className="text-sm text-gray-600">Pay using UPI: {upiId}</div>
+                        <div className="text-sm text-gray-600">PhonePe, Google Pay, Paytm & more</div>
                       </div>
                     </div>
                   </div>
@@ -396,7 +319,7 @@ const Checkout = () => {
 
                   <div className="text-sm text-gray-600">
                     {paymentMethod === 'upi' && (
-                      <p>You will be redirected to complete UPI payment</p>
+                      <p>Pay instantly using UPI apps like PhonePe, Google Pay, Paytm</p>
                     )}
                     {paymentMethod === 'cod' && (
                       <p>You will pay ₹{getTotalPrice().toFixed(2)} on delivery</p>
@@ -408,7 +331,7 @@ const Checkout = () => {
                     className="w-full bg-orange-600 hover:bg-orange-700"
                     disabled={isProcessing}
                   >
-                    {isProcessing ? 'Processing...' : paymentMethod === 'upi' ? 'Proceed to Payment' : 'Place Order'}
+                    {isProcessing ? 'Processing...' : paymentMethod === 'upi' ? 'Pay with UPI' : 'Place Order'}
                   </Button>
                 </div>
               </CardContent>
