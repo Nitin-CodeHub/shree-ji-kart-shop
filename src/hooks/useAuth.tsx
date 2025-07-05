@@ -1,5 +1,3 @@
-
-
 import { useContext, createContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -261,9 +259,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       console.log('Attempting Google sign in...');
       
-      // Use the exact redirect URL that should be configured in Supabase
-      const redirectUrl = `${window.location.origin}/`;
-      console.log('Redirect URL:', redirectUrl);
+      // Get the current URL for redirect
+      const currentUrl = window.location.origin;
+      const redirectUrl = `${currentUrl}/`;
+      
+      console.log('Using redirect URL:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -272,30 +272,38 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-          }
+          },
+          // Skip confirmation for faster OAuth flow
+          skipBrowserRedirect: false
         }
       });
 
       if (error) {
-        console.error('Google sign in error:', error);
+        console.error('Google sign in error details:', {
+          message: error.message,
+          status: error.status,
+          statusText: error.status
+        });
         
-        // Handle 404 and other common Google OAuth errors
-        let errorMessage = "Google login failed. ";
+        // Enhanced error handling for common Google OAuth issues
+        let errorMessage = "Google login failed: ";
         
-        if (error.message.includes('404') || error.message.includes('not found')) {
-          errorMessage = "Google login configuration error. Please contact support to fix the redirect URLs.";
-        } else if (error.message.includes('provider is not enabled')) {
-          errorMessage = "Google login is not enabled. Please contact support or try email login.";
-        } else if (error.message.includes('Invalid redirect URL')) {
-          errorMessage = "Invalid redirect URL. Please contact support to fix the configuration.";
+        if (error.message.includes('redirect_uri_mismatch')) {
+          errorMessage = "Redirect URI मismatch। Supabase में Google OAuth redirect URLs को properly configure करना होगा।";
         } else if (error.message.includes('unauthorized_client')) {
-          errorMessage = "Google OAuth client not properly configured. Please contact support.";
+          errorMessage = "Google OAuth client ID और secret properly configured नहीं हैं।";
+        } else if (error.message.includes('access_denied')) {
+          errorMessage = "Google login access denied। Please allow permissions और try again।";
+        } else if (error.message.includes('invalid_client')) {
+          errorMessage = "Invalid Google OAuth client configuration।";
+        } else if (error.message.includes('popup_blocked')) {
+          errorMessage = "Browser ने popup को block किया है। Please enable popups।";
         } else {
           errorMessage += error.message;
         }
 
         toast({
-          title: "Google Login Error",
+          title: "Google Login Configuration Issue",
           description: errorMessage,
           variant: "destructive"
         });
@@ -303,13 +311,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return { error };
       }
 
-      console.log('Google OAuth initiated successfully');
+      console.log('Google OAuth redirect initiated successfully');
       return { error: null };
-    } catch (error) {
-      console.error('Google sign in error:', error);
+    } catch (error: any) {
+      console.error('Unexpected Google sign in error:', error);
+      const errorMessage = "Unexpected error during Google login। Please try email login instead।";
+      
       toast({
         title: "Google Login Error",
-        description: "An unexpected error occurred. Please try email login instead.",
+        description: errorMessage,
         variant: "destructive"
       });
       return { error };
@@ -389,4 +399,3 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     </AuthContext.Provider>
   );
 };
-

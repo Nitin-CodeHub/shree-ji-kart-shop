@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -121,15 +120,21 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
     setError('');
     
     try {
+      console.log('Starting Google sign in process...');
       const { error } = await signInWithGoogle();
       
       if (error) {
+        console.error('Google sign in error:', error);
         let errorMessage = "Google login में समस्या हुई।";
         
-        if (error.message.includes('404') || error.message.includes('not found')) {
-          errorMessage = "Google login configuration में समस्या है। कृपया email login का use करें।";
-        } else if (error.message.includes('provider is not enabled')) {
-          errorMessage = "Google login enable नहीं है। कृपया email login का use करें।";
+        if (error.message.includes('redirect_uri_mismatch')) {
+          errorMessage = "Google OAuth redirect URL configuration गलत है। Admin से contact करें।";
+        } else if (error.message.includes('unauthorized_client')) {
+          errorMessage = "Google OAuth client properly configured नहीं है। Admin से contact करें।";
+        } else if (error.message.includes('access_denied')) {
+          errorMessage = "Google login permission denied। Please try again।";
+        } else if (error.message.includes('popup_blocked')) {
+          errorMessage = "Browser popup blocked है। Please allow popups और try again।";
         }
         
         setError(errorMessage);
@@ -139,14 +144,12 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
           variant: "destructive"
         });
       } else {
-        toast({
-          title: "Google Login Successful!",
-          description: "आप successfully login हो गए।",
-        });
-        onOpenChange(false);
+        console.log('Google OAuth redirect initiated successfully');
+        // Don't close dialog immediately as user will be redirected
       }
     } catch (error: any) {
-      const errorMessage = "Google login में समस्या हुई। कृपया email login का use करें।";
+      console.error('Unexpected Google login error:', error);
+      const errorMessage = "Google login में unexpected error हुई। कृपया email login का use करें।";
       setError(errorMessage);
       toast({
         title: "Google Login Error",
@@ -173,6 +176,12 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isLogin ? 'Login' : 'Sign Up'}</DialogTitle>
+          <DialogDescription>
+            {isLogin 
+              ? 'अपने account में login करें या Google का use करें।' 
+              : 'नया account बनाने के लिए details भरें।'
+            }
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
