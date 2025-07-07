@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -127,14 +128,12 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
         console.error('Google sign in error:', error);
         let errorMessage = "Google login में समस्या हुई।";
         
-        if (error.message.includes('redirect_uri_mismatch')) {
-          errorMessage = "Google OAuth redirect URL configuration गलत है। Admin से contact करें।";
-        } else if (error.message.includes('unauthorized_client')) {
-          errorMessage = "Google OAuth client properly configured नहीं है। Admin से contact करें।";
-        } else if (error.message.includes('access_denied')) {
-          errorMessage = "Google login permission denied। Please try again।";
-        } else if (error.message.includes('popup_blocked')) {
-          errorMessage = "Browser popup blocked है। Please allow popups और try again।";
+        if (error.message?.includes('redirect_uri_mismatch')) {
+          errorMessage = "Google OAuth configuration में समस्या है। कृपया admin से संपर्क करें।";
+        } else if (error.message?.includes('unauthorized_client')) {
+          errorMessage = "Google OAuth client properly configured नहीं है।";
+        } else if (error.message?.includes('access_denied')) {
+          errorMessage = "Google login permission denied। कृपया फिर से कोशिश करें।";
         }
         
         setError(errorMessage);
@@ -143,9 +142,14 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
           description: errorMessage,
           variant: "destructive"
         });
+        setFormLoading(false);
       } else {
         console.log('Google OAuth redirect initiated successfully');
-        // Don't close dialog immediately as user will be redirected
+        // Don't set loading to false as user will be redirected
+        toast({
+          title: "Redirecting to Google",
+          description: "कृपया Google login complete करें।",
+        });
       }
     } catch (error: any) {
       console.error('Unexpected Google login error:', error);
@@ -156,7 +160,6 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
         description: errorMessage,
         variant: "destructive"
       });
-    } finally {
       setFormLoading(false);
     }
   };

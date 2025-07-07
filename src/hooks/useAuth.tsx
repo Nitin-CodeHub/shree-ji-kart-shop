@@ -1,3 +1,4 @@
+
 import { useContext, createContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -258,73 +259,31 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       cleanupAuthState();
       
       console.log('Attempting Google sign in...');
-      
-      // Get the current URL for redirect
-      const currentUrl = window.location.origin;
-      const redirectUrl = `${currentUrl}/`;
-      
-      console.log('Using redirect URL:', redirectUrl);
+      console.log('Current URL origin:', window.location.origin);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: `${window.location.origin}/`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-          },
-          // Skip confirmation for faster OAuth flow
-          skipBrowserRedirect: false
+          }
         }
       });
 
       if (error) {
-        console.error('Google sign in error details:', {
-          message: error.message,
-          status: error.status,
-          statusText: error.status
-        });
-        
-        // Enhanced error handling for common Google OAuth issues
-        let errorMessage = "Google login failed: ";
-        
-        if (error.message.includes('redirect_uri_mismatch')) {
-          errorMessage = "Redirect URI मismatch। Supabase में Google OAuth redirect URLs को properly configure करना होगा।";
-        } else if (error.message.includes('unauthorized_client')) {
-          errorMessage = "Google OAuth client ID और secret properly configured नहीं हैं।";
-        } else if (error.message.includes('access_denied')) {
-          errorMessage = "Google login access denied। Please allow permissions और try again।";
-        } else if (error.message.includes('invalid_client')) {
-          errorMessage = "Invalid Google OAuth client configuration।";
-        } else if (error.message.includes('popup_blocked')) {
-          errorMessage = "Browser ने popup को block किया है। Please enable popups।";
-        } else {
-          errorMessage += error.message;
-        }
-
-        toast({
-          title: "Google Login Configuration Issue",
-          description: errorMessage,
-          variant: "destructive"
-        });
-        
+        console.error('Google sign in error:', error);
         return { error };
       }
 
-      console.log('Google OAuth redirect initiated successfully');
+      console.log('Google OAuth initiated successfully');
+      // Note: We don't setLoading(false) here because the user will be redirected
       return { error: null };
     } catch (error: any) {
       console.error('Unexpected Google sign in error:', error);
-      const errorMessage = "Unexpected error during Google login। Please try email login instead।";
-      
-      toast({
-        title: "Google Login Error",
-        description: errorMessage,
-        variant: "destructive"
-      });
-      return { error };
-    } finally {
       setLoading(false);
+      return { error };
     }
   };
 
