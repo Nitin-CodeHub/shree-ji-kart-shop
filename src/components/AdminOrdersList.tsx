@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +12,19 @@ interface AdminOrder {
   user_id: string;
   total_amount: number;
   items: any[];
+  customer_name: string;
+  customer_phone: string;
+  customer_address: string;
+  customer_pincode: string;
+  status: string;
+  created_at: string;
+}
+
+interface DatabaseOrder {
+  id: string;
+  user_id: string;
+  total_amount: number;
+  items: any;
   customer_name: string;
   customer_phone: string;
   customer_address: string;
@@ -46,7 +58,14 @@ const AdminOrdersList = () => {
       }
 
       console.log('Fetched orders:', data);
-      setOrders(data || []);
+      
+      // Transform the database orders to match our AdminOrder interface
+      const transformedOrders: AdminOrder[] = (data || []).map((order: DatabaseOrder) => ({
+        ...order,
+        items: Array.isArray(order.items) ? order.items : []
+      }));
+      
+      setOrders(transformedOrders);
     } catch (error) {
       console.error('Error:', error);
       toast({
