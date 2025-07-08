@@ -145,6 +145,56 @@ const sampleProducts: Product[] = [
     image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
     category: "Snacks",
     unit: "pack"
+  },
+  // New 5rs Biscuits
+  {
+    id: 19,
+    name: "Parle-G Biscuits",
+    price: 5,
+    image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Snacks",
+    unit: "pack"
+  },
+  {
+    id: 20,
+    name: "20-20 Biscuits",
+    price: 5,
+    image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Snacks",
+    unit: "pack"
+  },
+  {
+    id: 21,
+    name: "Patanjali Biscuits",
+    price: 5,
+    image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Snacks",
+    unit: "pack"
+  },
+  // New 10rs Detergents
+  {
+    id: 22,
+    name: "Surf Excel Detergent",
+    price: 10,
+    image: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Home Care",
+    unit: "sachet"
+  },
+  {
+    id: 23,
+    name: "Ghadi Detergent",
+    price: 10,
+    image: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Home Care",
+    unit: "sachet"
+  },
+  {
+    id: 24,
+    name: "Nirma Detergent",
+    price: 10,
+    image: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    category: "Home Care",
+    unit: "sachet"
   }
 ];
 
@@ -180,7 +230,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory = 'All' }) =
     setCurrentCategory(category);
   };
 
-  const categories = ['All', 'Groceries', 'Vegetables', 'Snacks', 'Body Care', 'Personal Care'];
+  const categories = ['All', 'Groceries', 'Vegetables', 'Snacks', 'Body Care', 'Home Care', 'Personal Care'];
 
   return (
     <section id="products" className="py-16 bg-gray-50">
