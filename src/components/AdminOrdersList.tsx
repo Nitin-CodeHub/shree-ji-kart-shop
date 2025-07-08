@@ -109,6 +109,37 @@ const AdminOrdersList = () => {
 
   useEffect(() => {
     fetchAllOrders();
+
+    // Set up real-time subscription for new orders
+    const channel = supabase
+      .channel('admin-orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          console.log('Real-time order change detected:', payload);
+          // Refresh orders when any change happens
+          fetchAllOrders();
+          
+          // Show notification for new orders
+          if (payload.eventType === 'INSERT') {
+            toast({
+              title: "New Order Received!",
+              description: `New order from ${payload.new.customer_name}`,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const getStatusColor = (status: string) => {

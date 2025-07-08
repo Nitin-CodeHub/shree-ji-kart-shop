@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -92,6 +91,37 @@ const AdminOrdersTable = () => {
 
   useEffect(() => {
     fetchAllOrders();
+
+    // Set up real-time subscription for new orders
+    const channel = supabase
+      .channel('admin-table-orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          console.log('Real-time order change detected in table view:', payload);
+          // Refresh orders when any change happens
+          fetchAllOrders();
+          
+          // Show notification for new orders
+          if (payload.eventType === 'INSERT') {
+            toast({
+              title: "New Order Received!",
+              description: `New order from ${payload.new.customer_name}`,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const getStatusColor = (status: string) => {
