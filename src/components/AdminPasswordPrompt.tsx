@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,7 @@ const AdminPasswordPrompt: React.FC<AdminPasswordPromptProps> = ({ onAuthenticat
   const { toast } = useToast();
 
   // Admin password - you can change this to any password you want
-  const ADMIN_PASSWORD = 'admin123';
+  const ADMIN_PASSWORD = 'nitin@2007';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
