@@ -5,10 +5,17 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Shield, Table, Grid } from 'lucide-react';
 import AdminOrdersList from '@/components/AdminOrdersList';
 import AdminOrdersTable from '@/components/AdminOrdersTable';
+import AdminPasswordPrompt from '@/components/AdminPasswordPrompt';
 
 const AdminOrders = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // If not authenticated, show password prompt
+  if (!isAuthenticated) {
+    return <AdminPasswordPrompt onAuthenticated={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
