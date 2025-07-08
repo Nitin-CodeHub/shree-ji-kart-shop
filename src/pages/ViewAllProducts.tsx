@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CartProvider } from '@/contexts/CartContext';
 import Header from '@/components/Header';
@@ -154,34 +155,51 @@ const sampleProducts: Product[] = [
     category: "Snacks",
     unit: "pack"
   },
-  // New 5rs Biscuits
+  // Updated Products with Real Images and Prices
   {
     id: 19,
-    name: "Parle-G Biscuits",
-    price: 5,
-    image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    name: "Britannia Toastea Premium Bake Rusk",
+    price: 10,
+    image: "/lovable-uploads/e6bfda5d-8da8-4858-bb70-7cb6631e8237.png",
     category: "Snacks",
     unit: "pack"
   },
   {
     id: 20,
-    name: "20-20 Biscuits",
+    name: "Patanjali Dant Kanti Natural Toothpaste",
+    price: 60,
+    originalPrice: 70,
+    image: "/lovable-uploads/74ce55c6-a340-4d12-8283-35e00dff7494.png",
+    category: "Body Care",
+    unit: "tube"
+  },
+  {
+    id: 21,
+    name: "Parle-G Biscuits",
     price: 5,
-    image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    image: "/lovable-uploads/7a7fe89e-f706-46c4-ba3e-499829fd1458.png",
     category: "Snacks",
     unit: "pack"
   },
   {
-    id: 21,
-    name: "Patanjali Biscuits",
+    id: 22,
+    name: "Oreo Chocolate Sandwich Biscuits",
+    price: 10,
+    image: "/lovable-uploads/02d6e5d5-5749-44d3-ac87-42206df61727.png",
+    category: "Snacks",
+    unit: "pack"
+  },
+  {
+    id: 23,
+    name: "Britannia Good Day Butter Cookies",
     price: 5,
-    image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    image: "/lovable-uploads/18d12bd9-fd50-4bfa-ace1-20266edb1c82.png",
     category: "Snacks",
     unit: "pack"
   },
   // New 10rs Detergents
   {
-    id: 22,
+    id: 24,
     name: "Surf Excel Detergent",
     price: 10,
     image: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
@@ -189,7 +207,7 @@ const sampleProducts: Product[] = [
     unit: "sachet"
   },
   {
-    id: 23,
+    id: 25,
     name: "Ghadi Detergent",
     price: 10,
     image: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
@@ -197,7 +215,7 @@ const sampleProducts: Product[] = [
     unit: "sachet"
   },
   {
-    id: 24,
+    id: 26,
     name: "Nirma Detergent",
     price: 10,
     image: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
