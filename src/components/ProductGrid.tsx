@@ -352,8 +352,10 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory = 'All' }) =
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.length > 0 ? (
-            filteredProducts.slice(0, 8).map((product) => (
-              <ProductCard key={product.id} product={product} />
+            filteredProducts.slice(0, 8).map((product, index) => (
+              <div key={product.id} className={`animate-fade-in`} style={{animationDelay: `${index * 0.1}s`}}>
+                <ProductCard product={product} />
+              </div>
             ))
           ) : (
             <div className="col-span-full text-center py-12">

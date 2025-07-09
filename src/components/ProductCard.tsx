@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Product, useCart } from '@/contexts/CartContext';
-import { ShoppingCart, Plus, Minus } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, ImageIcon } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -12,18 +12,44 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { cart, addToCart, updateQuantity } = useCart();
   const cartItem = cart.find(item => item.id === product.id);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+    <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover-scale">
       <CardContent className="p-4">
-        <div className="relative overflow-hidden rounded-lg mb-4">
+        <div className="relative overflow-hidden rounded-lg mb-4 bg-gray-100">
+          {/* Loading Placeholder */}
+          {!imageLoaded && !imageError && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse">
+              <ImageIcon className="h-12 w-12 text-gray-400" />
+            </div>
+          )}
+          
+          {/* Error Placeholder */}
+          {imageError && (
+            <div className="w-full h-48 flex items-center justify-center bg-gray-200">
+              <div className="text-center">
+                <ImageIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-xs text-gray-500">Image not available</p>
+              </div>
+            </div>
+          )}
+          
+          {/* Actual Image */}
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            className={`w-full h-48 object-cover group-hover:scale-105 transition-all duration-300 ${
+              imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            loading="lazy"
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
           />
-          {product.originalPrice && (
-            <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">
+          
+          {product.originalPrice && imageLoaded && (
+            <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold animate-fade-in">
               {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
             </div>
           )}
