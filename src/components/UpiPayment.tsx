@@ -22,7 +22,7 @@ const UpiPayment: React.FC<UpiPaymentProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   
-  const upiId = "9755665650@ibl";
+  const upiId = "9755665650@paytm";
   const paymentNote = `Order #${orderId.slice(-8)}`;
   
   // Generate UPI payment URLs for different apps

@@ -91,9 +91,14 @@ export const useAdminOrders = () => {
         return;
       }
 
+      let statusMessage = `Order status updated to ${newStatus}`;
+      if (newStatus === 'cancelled') {
+        statusMessage = "Order cancelled - Product not available for location";
+      }
+
       toast({
         title: "Status Updated",
-        description: `Order status updated to ${newStatus}`,
+        description: statusMessage,
       });
 
       // Refresh orders

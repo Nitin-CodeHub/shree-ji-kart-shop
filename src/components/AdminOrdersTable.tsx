@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Phone, Eye, CheckCircle, Clock, Truck } from 'lucide-react';
+import { Phone, Eye, CheckCircle, Clock, Truck, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AdminOrder {
@@ -129,6 +130,7 @@ const AdminOrdersTable = () => {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'confirmed': return 'bg-blue-100 text-blue-800';
       case 'delivered': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -138,6 +140,7 @@ const AdminOrdersTable = () => {
       case 'pending': return <Clock className="h-4 w-4" />;
       case 'confirmed': return <CheckCircle className="h-4 w-4" />;
       case 'delivered': return <Truck className="h-4 w-4" />;
+      case 'cancelled': return <X className="h-4 w-4" />;
       default: return <Clock className="h-4 w-4" />;
     }
   };
@@ -216,7 +219,7 @@ const AdminOrdersTable = () => {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 flex-wrap">
                       <Button
                         size="sm"
                         variant="outline"
@@ -232,22 +235,40 @@ const AdminOrdersTable = () => {
                         <Phone className="h-3 w-3" />
                       </Button>
                       {order.status === 'pending' && (
-                        <Button
-                          size="sm"
-                          onClick={() => updateOrderStatus(order.id, 'confirmed')}
-                          className="bg-blue-600 hover:bg-blue-700"
-                        >
-                          Confirm
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => updateOrderStatus(order.id, 'confirmed')}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            Confirm
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                            variant="destructive"
+                          >
+                            Cancel
+                          </Button>
+                        </>
                       )}
                       {order.status === 'confirmed' && (
-                        <Button
-                          size="sm"
-                          onClick={() => updateOrderStatus(order.id, 'delivered')}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          Delivered
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => updateOrderStatus(order.id, 'delivered')}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            Delivered
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                            variant="destructive"
+                          >
+                            Cancel
+                          </Button>
+                        </>
                       )}
                     </div>
                   </TableCell>

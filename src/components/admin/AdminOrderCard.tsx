@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Phone, MapPin, Package, Clock, CheckCircle, Truck } from 'lucide-react';
+import { Phone, MapPin, Package, Clock, CheckCircle, Truck, X } from 'lucide-react';
 
 interface AdminOrder {
   id: string;
@@ -30,6 +30,7 @@ const AdminOrderCard: React.FC<AdminOrderCardProps> = ({ order, onUpdateStatus }
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'confirmed': return 'bg-blue-100 text-blue-800';
       case 'delivered': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -39,6 +40,7 @@ const AdminOrderCard: React.FC<AdminOrderCardProps> = ({ order, onUpdateStatus }
       case 'pending': return <Clock className="h-4 w-4" />;
       case 'confirmed': return <CheckCircle className="h-4 w-4" />;
       case 'delivered': return <Truck className="h-4 w-4" />;
+      case 'cancelled': return <X className="h-4 w-4" />;
       default: return <Package className="h-4 w-4" />;
     }
   };
@@ -113,24 +115,44 @@ const AdminOrderCard: React.FC<AdminOrderCardProps> = ({ order, onUpdateStatus }
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 pt-2">
+        <div className="flex flex-wrap gap-2 pt-2">
           {order.status === 'pending' && (
-            <Button 
-              onClick={() => onUpdateStatus(order.id, 'confirmed')}
-              className="bg-blue-600 hover:bg-blue-700"
-              size="sm"
-            >
-              Confirm Order
-            </Button>
+            <>
+              <Button 
+                onClick={() => onUpdateStatus(order.id, 'confirmed')}
+                className="bg-blue-600 hover:bg-blue-700"
+                size="sm"
+              >
+                Confirm Order
+              </Button>
+              <Button 
+                onClick={() => onUpdateStatus(order.id, 'cancelled')}
+                variant="destructive"
+                size="sm"
+              >
+                <X className="h-3 w-3 mr-1" />
+                Cancel Order
+              </Button>
+            </>
           )}
           {order.status === 'confirmed' && (
-            <Button 
-              onClick={() => onUpdateStatus(order.id, 'delivered')}
-              className="bg-green-600 hover:bg-green-700"
-              size="sm"
-            >
-              Mark as Delivered
-            </Button>
+            <>
+              <Button 
+                onClick={() => onUpdateStatus(order.id, 'delivered')}
+                className="bg-green-600 hover:bg-green-700"
+                size="sm"
+              >
+                Mark as Delivered
+              </Button>
+              <Button 
+                onClick={() => onUpdateStatus(order.id, 'cancelled')}
+                variant="destructive"
+                size="sm"
+              >
+                <X className="h-3 w-3 mr-1" />
+                Cancel Order
+              </Button>
+            </>
           )}
           <Button 
             onClick={() => window.open(`tel:${order.customer_phone}`)}
