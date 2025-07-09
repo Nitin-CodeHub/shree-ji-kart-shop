@@ -197,30 +197,94 @@ const sampleProducts: Product[] = [
     category: "Snacks",
     unit: "pack"
   },
-  // New 10rs Detergents
+  // New Real Products from User
   {
     id: 24,
-    name: "Surf Excel Detergent",
-    price: 10,
-    image: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    category: "Home Care",
-    unit: "sachet"
+    name: "Patanjali Cow Ghee",
+    price: 160,
+    image: "/lovable-uploads/d6ab323b-9c86-4a8b-b8d3-777254eceeae.png",
+    category: "Dairy",
+    unit: "200g"
   },
   {
     id: 25,
-    name: "Ghadi Detergent",
-    price: 10,
-    image: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-    category: "Home Care",
-    unit: "sachet"
+    name: "Golden Laxmi Sooji",
+    price: 30,
+    image: "/lovable-uploads/01c3131a-8284-4ebf-9556-737b4f465498.png",
+    category: "Groceries",
+    unit: "500g"
   },
   {
     id: 26,
-    name: "Nirma Detergent",
+    name: "Rin Detergent Soap",
     price: 10,
-    image: "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    image: "/lovable-uploads/ae45fe0b-fbfa-4766-ad6d-33c2047f3373.png",
+    category: "Personal Care",
+    unit: "piece"
+  },
+  {
+    id: 27,
+    name: "Tata Salt",
+    price: 30,
+    image: "/lovable-uploads/49fe2d2e-cd40-4659-833e-1d6f13eabc6f.png",
+    category: "Groceries",
+    unit: "1kg"
+  },
+  {
+    id: 28,
+    name: "Lifebuoy Total 10 Soap",
+    price: 10,
+    image: "/lovable-uploads/093bcd16-5de0-4011-af2d-ed8d5cebb6a0.png",
+    category: "Personal Care",
+    unit: "piece"
+  },
+  {
+    id: 29,
+    name: "Ghadi Detergent Soap",
+    price: 10,
+    image: "/lovable-uploads/45bcf28b-f759-476f-9926-d0787f05c84c.png",
+    category: "Personal Care",
+    unit: "piece"
+  },
+  {
+    id: 30,
+    name: "Ghadi Detergent Powder 500g",
+    price: 35,
+    image: "/lovable-uploads/3594e315-ad5f-4e28-ad7d-1729f99bc5d8.png",
     category: "Home Care",
-    unit: "sachet"
+    unit: "500g"
+  },
+  {
+    id: 31,
+    name: "Ghadi Detergent Powder 1kg",
+    price: 70,
+    image: "/lovable-uploads/3594e315-ad5f-4e28-ad7d-1729f99bc5d8.png",
+    category: "Home Care",
+    unit: "1kg"
+  },
+  {
+    id: 32,
+    name: "Besan Ke Laddu",
+    price: 180,
+    image: "/lovable-uploads/9299eb23-e2cc-4106-b007-b5b53ddd686f.png",
+    category: "Sweets",
+    unit: "1kg"
+  },
+  {
+    id: 33,
+    name: "Tata Tea Agni",
+    price: 60,
+    image: "/lovable-uploads/ac2c91ab-90d5-412f-b4af-d73acdc7a306.png",
+    category: "Beverages",
+    unit: "250g"
+  },
+  {
+    id: 34,
+    name: "Yellow Marvel Tea",
+    price: 130,
+    image: "/lovable-uploads/59c1e535-e710-4c4f-bd64-bcae2220e471.png",
+    category: "Beverages",
+    unit: "200g"
   }
 ];
 
@@ -252,7 +316,7 @@ const ViewAllProducts = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const categories = ['All', 'Groceries', 'Vegetables', 'Snacks', 'Body Care', 'Home Care', 'Personal Care'];
+  const categories = ['All', 'Groceries', 'Vegetables', 'Snacks', 'Body Care', 'Home Care', 'Personal Care', 'Dairy', 'Sweets', 'Beverages'];
 
   return (
     <CartProvider>
