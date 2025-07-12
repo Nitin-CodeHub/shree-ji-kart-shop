@@ -285,6 +285,70 @@ const sampleProducts: Product[] = [
     image: "/lovable-uploads/59c1e535-e710-4c4f-bd64-bcae2220e471.png",
     category: "Beverages",
     unit: "200g"
+  },
+  {
+    id: 35,
+    name: "Amrit Tea Fresh CTC",
+    price: 90,
+    image: "/lovable-uploads/be582502-f571-4d09-8a4e-6091dca2eb21.png",
+    category: "Beverages",
+    unit: "250g"
+  },
+  {
+    id: 36,
+    name: "Pears Soap Small",
+    price: 10,
+    image: "/lovable-uploads/824b8845-cfbe-4805-8c22-64c15699c3d3.png",
+    category: "Personal Care",
+    unit: "60g"
+  },
+  {
+    id: 37,
+    name: "Pears Soap Large",
+    price: 25,
+    image: "/lovable-uploads/824b8845-cfbe-4805-8c22-64c15699c3d3.png",
+    category: "Personal Care",
+    unit: "60g"
+  },
+  {
+    id: 38,
+    name: "Dove Soap Small",
+    price: 10,
+    image: "/lovable-uploads/acb8799e-2485-4e03-ab65-e87a50e9ee49.png",
+    category: "Personal Care",
+    unit: "50g"
+  },
+  {
+    id: 39,
+    name: "Dove Soap Large",
+    price: 25,
+    image: "/lovable-uploads/acb8799e-2485-4e03-ab65-e87a50e9ee49.png",
+    category: "Personal Care",
+    unit: "50g"
+  },
+  {
+    id: 40,
+    name: "Lux Soap Velvet Touch",
+    price: 10,
+    image: "/lovable-uploads/87665d76-8337-4f1d-bebb-186d05dd33e4.png",
+    category: "Personal Care",
+    unit: "piece"
+  },
+  {
+    id: 41,
+    name: "Vim Bar Small",
+    price: 5,
+    image: "/lovable-uploads/39776ac3-1810-4127-9920-55c3a152d83e.png",
+    category: "Personal Care",
+    unit: "piece"
+  },
+  {
+    id: 42,
+    name: "Vim Bar Large",
+    price: 10,
+    image: "/lovable-uploads/39776ac3-1810-4127-9920-55c3a152d83e.png",
+    category: "Personal Care",
+    unit: "piece"
   }
 ];
 

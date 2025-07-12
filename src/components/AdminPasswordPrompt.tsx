@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Shield, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AdminPasswordPromptProps {
   onAuthenticated: () => void;
@@ -17,9 +19,34 @@ const AdminPasswordPrompt: React.FC<AdminPasswordPromptProps> = ({ onAuthenticat
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user, signInWithGoogle } = useAuth();
 
-  // Admin password - you can change this to any password you want
+  // Your specific Gmail ID for admin access
+  const ADMIN_EMAIL = 'nitinyadav7755321@gmail.com';
+  
+  // Fallback password for testing
   const ADMIN_PASSWORD = 'nitin@2007';
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const { error } = await signInWithGoogle();
+      if (error) {
+        setError('Google login में समस्या हुई है।');
+        toast({
+          title: "Login Error",
+          description: "Google login में समस्या हुई है।",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      setError('कोई समस्या हुई है। कृपया फिर से कोशिश करें।');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +75,26 @@ const AdminPasswordPrompt: React.FC<AdminPasswordPromptProps> = ({ onAuthenticat
     }
   };
 
+  // Check if user is logged in with correct Google account
+  React.useEffect(() => {
+    if (user && user.email === ADMIN_EMAIL) {
+      toast({
+        title: "Access Granted",
+        description: "Welcome Admin! Google authentication successful.",
+      });
+      onAuthenticated();
+    } else if (user && user.email !== ADMIN_EMAIL) {
+      setError(`केवल ${ADMIN_EMAIL} से login कर सकते हैं।`);
+      toast({
+        title: "Access Denied",
+        description: `केवल ${ADMIN_EMAIL} से login कर सकते हैं।`,
+        variant: "destructive"
+      });
+      // Sign out the unauthorized user
+      supabase.auth.signOut();
+    }
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
@@ -70,52 +117,70 @@ const AdminPasswordPrompt: React.FC<AdminPasswordPromptProps> = ({ onAuthenticat
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="password">Admin Password *</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError('');
-                }}
-                placeholder="Admin password डालें"
-                required
-                disabled={loading}
-                className="pr-10"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
-                disabled={loading}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
+        <div className="space-y-4">
+          <Button 
+            onClick={handleGoogleLogin}
+            className="w-full bg-red-600 hover:bg-red-700 text-white"
+            disabled={loading}
+          >
+            {loading ? 'Processing...' : 'Google से Admin Login करें'}
+          </Button>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-muted-foreground">या</span>
             </div>
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full bg-orange-600 hover:bg-orange-700"
-            disabled={loading || !password}
-          >
-            {loading ? 'Processing...' : 'Admin Panel में Enter करें'}
-          </Button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="password">Admin Password (Backup)</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError('');
+                  }}
+                  placeholder="Admin password डालें"
+                  disabled={loading}
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={loading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full bg-orange-600 hover:bg-orange-700"
+              disabled={loading || !password}
+            >
+              {loading ? 'Processing...' : 'Password से Login करें'}
+            </Button>
+          </form>
+        </div>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-500">
-            🔒 यह admin panel secure है। केवल authorized users ही access कर सकते हैं।
+            🔒 केवल {ADMIN_EMAIL} से access कर सकते हैं।
           </p>
         </div>
       </div>

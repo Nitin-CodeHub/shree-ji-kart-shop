@@ -117,6 +117,18 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
                         <Button 
                           variant="outline" 
                           size="sm" 
+                          onClick={() => {
+                            navigate('/orders');
+                            setMobileMenuOpen(false);
+                          }}
+                          className="w-full"
+                        >
+                          <User className="h-4 w-4 mr-2" />
+                          Order History
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
                           onClick={handleLogout}
                           className="w-full"
                         >
