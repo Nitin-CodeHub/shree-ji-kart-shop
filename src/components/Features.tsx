@@ -29,7 +29,7 @@ const Features = () => {
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 fade-in-up">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">Why Choose Shree Ji Kirana Store?</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             We are committed to providing you with the best shopping experience and highest quality products.
@@ -38,11 +38,11 @@ const Features = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
-            <div key={index} className="text-center group hover:scale-105 transition-transform duration-200">
-              <div className="bg-gray-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 group-hover:bg-orange-50 transition-colors duration-200">
+            <div key={index} className={`text-center group hover:scale-105 transition-transform duration-300 hover-lift hover-glow fade-in-up stagger-${index + 1}`}>
+              <div className="bg-gray-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 group-hover:bg-orange-50 transition-colors duration-300 pulse-soft">
                 {feature.icon}
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">{feature.title}</h3>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2 group-hover:text-orange-600 transition-colors">{feature.title}</h3>
               <p className="text-gray-600">{feature.description}</p>
             </div>
           ))}
