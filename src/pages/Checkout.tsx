@@ -2,406 +2,399 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
-import { useAuth } from '@/hooks/useAuth';
-import { useOrders } from '@/hooks/useOrders';
-import { useLocation } from '@/hooks/useLocation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, CreditCard, Truck, Smartphone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { ArrowLeft, ShoppingCart, User, MapPin, Phone, CreditCard } from 'lucide-react';
 import UpiPayment from '@/components/UpiPayment';
-import LocationTracker from '@/components/LocationTracker';
+import AuthDialog from '@/components/AuthDialog';
 
 const Checkout = () => {
-  const { cart, getTotalPrice, clearCart } = useCart();
-  const { user } = useAuth();
-  const { addOrder } = useOrders();
-  const { location } = useLocation();
   const navigate = useNavigate();
+  const { items, getTotalPrice, clearCart } = useCart();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   
-  const [customerInfo, setCustomerInfo] = useState({
+  const [customerDetails, setCustomerDetails] = useState({
     name: '',
     phone: '',
     address: '',
     pincode: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   
-  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod'>('upi');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [showUpiPayment, setShowUpiPayment] = useState(false);
-  const [currentOrderId, setCurrentOrderId] = useState('');
-
-  // Load user details if logged in
   useEffect(() => {
-    if (user) {
-      setCustomerInfo({
-        name: user.email || '',
-        phone: '',
-        address: location?.address || '',
-        pincode: ''
-      });
+    if (items.length === 0) {
+      navigate('/');
     }
-  }, [user, location]);
+  }, [items, navigate]);
 
-  // Auto-fill location data when available
   useEffect(() => {
-    if (location && location.address) {
-      setCustomerInfo(prev => ({
-        ...prev,
-        address: location.address || prev.address
-      }));
-    }
-  }, [location]);
+    const fetchUserProfile = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (data && !error) {
+          setCustomerDetails({
+            name: data.name || '',
+            phone: data.phone || '',
+            address: data.address || '',
+            pincode: data.pincode || ''
+          });
+        }
+      }
+    };
 
-  const handleInputChange = (field: string, value: string) => {
-    setCustomerInfo(prev => ({
+    if (user && !authLoading) {
+      fetchUserProfile();
+    }
+  }, [user, authLoading]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCustomerDetails(prev => ({
       ...prev,
-      [field]: value
+      [name]: value
     }));
   };
 
-  const handleLocationUpdate = (locationData: any) => {
-    if (locationData.address) {
-      setCustomerInfo(prev => ({
-        ...prev,
-        address: locationData.address
-      }));
-      
-      toast({
-        title: "Location Updated",
-        description: "Address automatically filled from your location",
-      });
-    }
-  };
-
-  const handlePlaceOrder = async () => {
-    // Check if user is authenticated
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please login to place an order",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Validate required fields
-    if (!customerInfo.name || !customerInfo.phone || !customerInfo.address || !customerInfo.pincode) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill all required fields",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (cart.length === 0) {
-      toast({
-        title: "Empty Cart",
-        description: "Please add items to cart before checkout",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (paymentMethod === 'upi') {
-      // Generate order ID and show UPI payment
-      const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      setCurrentOrderId(orderId);
-      setShowUpiPayment(true);
-      return;
-    }
-
-    // Handle COD orders
-    await processOrder('pending');
-  };
-
-  const processOrder = async (status: 'pending' | 'confirmed') => {
-    setIsProcessing(true);
+  const validateForm = () => {
+    const { name, phone, address, pincode } = customerDetails;
     
-    const order = {
-      items: [...cart],
-      customer: { 
-        ...customerInfo,
-        // Include location data if available
-        location: location ? {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          accuracy: location.accuracy
-        } : null
-      },
-      paymentMethod,
-      total: getTotalPrice(),
-      status,
-    };
-
-    try {
-      console.log('Processing order with location data:', order);
-      
-      await addOrder(order);
-      clearCart();
-      setIsProcessing(false);
-      setShowUpiPayment(false);
-      
-      toast({
-        title: "Order Placed Successfully!",
-        description: `Your order has been ${status === 'confirmed' ? 'confirmed' : 'placed'}. ${paymentMethod === 'cod' ? 'You will pay on delivery.' : 'Payment received.'}`,
-      });
-
-      navigate('/orders');
-    } catch (error) {
-      setIsProcessing(false);
-      console.error('Order processing error:', error);
+    if (!name.trim()) {
       toast({
         title: "Error",
-        description: "Failed to place order. Please try again.",
+        description: "कृपया अपना नाम दर्ज करें",
         variant: "destructive"
       });
+      return false;
+    }
+    
+    if (!phone.trim() || phone.length < 10) {
+      toast({
+        title: "Error", 
+        description: "कृपया वैध फोन नंबर दर्ज करें",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    if (!address.trim()) {
+      toast({
+        title: "Error",
+        description: "कृपया अपना पूरा पता दर्ज करें",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    if (!pincode.trim() || pincode.length !== 6) {
+      toast({
+        title: "Error",
+        description: "कृपया वैध पिनकोड दर्ज करें",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user) {
+      setShowAuthDialog(true);
+      return;
+    }
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      console.log('Submitting order...', { customerDetails, items, total: getTotalPrice() });
+      
+      // Create order in database
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert([
+          {
+            user_id: user.id,
+            total_amount: getTotalPrice(),
+            items: items,
+            customer_name: customerDetails.name,
+            customer_phone: customerDetails.phone,
+            customer_address: customerDetails.address,
+            customer_pincode: customerDetails.pincode,
+            status: 'pending'
+          }
+        ])
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error('Order creation error:', orderError);
+        throw orderError;
+      }
+
+      console.log('Order created successfully:', orderData);
+
+      // Send WhatsApp notification
+      try {
+        console.log('Sending WhatsApp notification...');
+        const { data: notificationData, error: notificationError } = await supabase.functions.invoke('send-whatsapp-notification', {
+          body: {
+            customerName: customerDetails.name,
+            customerPhone: customerDetails.phone,
+            totalAmount: getTotalPrice(),
+            items: items,
+            customerAddress: customerDetails.address,
+            customerPincode: customerDetails.pincode
+          }
+        });
+
+        if (notificationError) {
+          console.error('WhatsApp notification error:', notificationError);
+          // Don't fail the order if notification fails
+        } else {
+          console.log('WhatsApp notification sent:', notificationData);
+        }
+      } catch (notificationError) {
+        console.error('WhatsApp notification failed:', notificationError);
+        // Continue with success even if notification fails
+      }
+
+      // Update user profile if needed
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          name: customerDetails.name,
+          phone: customerDetails.phone,
+          address: customerDetails.address,
+          pincode: customerDetails.pincode
+        });
+
+      toast({
+        title: "Order Placed Successfully!",
+        description: "आपका ऑर्डर सफलतापूर्वक प्लेस हो गया है। हम जल्द ही आपसे संपर्क करेंगे।",
+      });
+
+      clearCart();
+      navigate('/order-history');
+
+    } catch (error) {
+      console.error('Error placing order:', error);
+      toast({
+        title: "Error",
+        description: "Order placement में समस्या हुई। कृपया दोबारा कोशिश करें।",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleUpiPaymentSuccess = async () => {
-    await processOrder('confirmed');
-  };
-
-  if (cart.length === 0) {
+  if (authLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-md mx-auto text-center">
-          <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
-          <p className="text-gray-600 mb-6">Add some products to proceed with checkout</p>
-          <Button onClick={() => navigate('/')}>Continue Shopping</Button>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  if (showUpiPayment) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center mb-6">
-          <Button variant="ghost" onClick={() => setShowUpiPayment(false)} className="mr-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Checkout
-          </Button>
-          <h1 className="text-3xl font-bold">UPI Payment</h1>
-        </div>
-        
-        <UpiPayment
-          amount={getTotalPrice()}
-          orderId={currentOrderId}
-          onPaymentSuccess={handleUpiPaymentSuccess}
-          onBack={() => setShowUpiPayment(false)}
-        />
-      </div>
-    );
+  if (items.length === 0) {
+    return null;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center mb-6">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mr-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-3xl font-bold">Checkout</h1>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Customer Information */}
-          <div className="space-y-6">
-            {/* Location Tracker */}
-            <LocationTracker onLocationUpdate={handleLocationUpdate} />
-
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  Delivery Information
-                  {user && (
-                    <span className="text-sm font-normal text-green-600 ml-2">
-                      (Auto-filled from your profile)
-                    </span>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Full Name *</Label>
-                  <Input
-                    id="name"
-                    value={customerInfo.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="Enter your full name"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    value={customerInfo.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder="Enter your phone number"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="address">Complete Address *</Label>
-                  <Input
-                    id="address"
-                    value={customerInfo.address}
-                    onChange={(e) => handleInputChange('address', e.target.value)}
-                    placeholder={location ? "Address auto-filled from location" : "Enter your complete address"}
-                    required
-                  />
-                  {location && (
-                    <p className="text-xs text-green-600 mt-1">
-                      ✓ Address auto-filled from your location
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="pincode">Pincode *</Label>
-                  <Input
-                    id="pincode"
-                    value={customerInfo.pincode}
-                    onChange={(e) => handleInputChange('pincode', e.target.value)}
-                    placeholder="Enter your pincode"
-                    required
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Payment Method */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Payment Method</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div 
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      paymentMethod === 'upi' 
-                        ? 'border-orange-500 bg-orange-50' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => setPaymentMethod('upi')}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="radio"
-                        checked={paymentMethod === 'upi'}
-                        onChange={() => setPaymentMethod('upi')}
-                        className="text-orange-600"
-                      />
-                      <Smartphone className="h-5 w-5" />
-                      <div>
-                        <div className="font-medium">UPI Payment</div>
-                        <div className="text-sm text-gray-600">PhonePe, Google Pay, Paytm & more</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div 
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      paymentMethod === 'cod' 
-                        ? 'border-orange-500 bg-orange-50' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => setPaymentMethod('cod')}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="radio"
-                        checked={paymentMethod === 'cod'}
-                        onChange={() => setPaymentMethod('cod')}
-                        className="text-orange-600"
-                      />
-                      <Truck className="h-5 w-5" />
-                      <div>
-                        <div className="font-medium">Cash on Delivery</div>
-                        <div className="text-sm text-gray-600">Pay when your order arrives</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center mb-6">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate(-1)} 
+              className="mr-4 hover:bg-orange-100"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Back</span>
+            </Button>
+            <div className="flex items-center gap-2">
+              <div className="bg-orange-100 p-2 rounded-lg">
+                <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+                  Checkout
+                </h1>
+                <p className="text-sm text-gray-600 hidden sm:block">Complete your order</p>
+              </div>
+            </div>
           </div>
 
-          {/* Order Summary */}
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
+          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8">
+            {/* Order Summary */}
+            <Card className="border border-gray-200 shadow-sm">
+              <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100">
+                <CardTitle className="flex items-center gap-2 text-orange-800">
+                  <ShoppingCart className="h-5 w-5" />
+                  Order Summary
+                </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 sm:p-6">
                 <div className="space-y-4">
-                  {cart.map((item) => (
-                    <div key={item.id} className="flex justify-between items-center">
+                  {items.map((item) => (
+                    <div key={item.id} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
                       <div className="flex-1">
-                        <h4 className="font-medium">{item.name}</h4>
+                        <h3 className="font-medium text-gray-900 text-sm sm:text-base">{item.name}</h3>
                         <p className="text-sm text-gray-600">
-                          ₹{item.price}/{item.unit} × {item.quantity}
+                          ₹{item.price.toFixed(2)} × {item.quantity}
                         </p>
                       </div>
-                      <div className="font-medium">
+                      <div className="font-semibold text-gray-900">
                         ₹{(item.price * item.quantity).toFixed(2)}
                       </div>
                     </div>
                   ))}
                   
-                  <Separator />
-                  
-                  <div className="flex justify-between items-center text-lg font-bold">
-                    <span>Total Amount</span>
-                    <span>₹{getTotalPrice().toFixed(2)}</span>
+                  <div className="pt-4 border-t border-gray-200">
+                    <div className="flex justify-between items-center text-lg font-bold text-gray-900">
+                      <span>Total:</span>
+                      <span className="text-green-600">₹{getTotalPrice().toFixed(2)}</span>
+                    </div>
                   </div>
-
-                  <div className="text-sm text-gray-600">
-                    {paymentMethod === 'upi' && (
-                      <p>Pay instantly using UPI apps like PhonePe, Google Pay, Paytm</p>
-                    )}
-                    {paymentMethod === 'cod' && (
-                      <p>You will pay ₹{getTotalPrice().toFixed(2)} on delivery</p>
-                    )}
-                  </div>
-
-                  <Button 
-                    onClick={handlePlaceOrder}
-                    className="w-full bg-orange-600 hover:bg-orange-700"
-                    disabled={isProcessing}
-                  >
-                    {isProcessing ? 'Processing...' : paymentMethod === 'upi' ? 'Pay with UPI' : 'Place Order'}
-                  </Button>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Location Info Display */}
-            {location && (
-              <Card className="mt-4">
-                <CardHeader>
-                  <CardTitle className="text-sm">Delivery Location Details</CardTitle>
-                </CardHeader>
-                <CardContent className="text-xs text-gray-600">
-                  <p>Coordinates: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</p>
-                  {location.accuracy && (
-                    <p>Location Accuracy: ~{Math.round(location.accuracy)} meters</p>
-                  )}
-                  <p className="text-green-600 mt-1">✓ Location captured for accurate delivery</p>
-                </CardContent>
-              </Card>
-            )}
+            {/* Customer Details Form */}
+            <Card className="border border-gray-200 shadow-sm">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100">
+                <CardTitle className="flex items-center gap-2 text-blue-800">
+                  <User className="h-5 w-5" />
+                  Delivery Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+                      Full Name *
+                    </Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={customerDetails.name}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                      <Phone className="h-4 w-4 inline mr-1" />
+                      Phone Number *
+                    </Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      placeholder="Enter your phone number"
+                      value={customerDetails.phone}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="address" className="text-sm font-medium text-gray-700">
+                      <MapPin className="h-4 w-4 inline mr-1" />
+                      Complete Address *
+                    </Label>
+                    <Input
+                      id="address"
+                      name="address"
+                      type="text"
+                      placeholder="House No., Street, Area, City"
+                      value={customerDetails.address}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="pincode" className="text-sm font-medium text-gray-700">
+                      Pincode *
+                    </Label>
+                    <Input
+                      id="pincode"
+                      name="pincode"
+                      type="text"
+                      placeholder="Enter 6-digit pincode"
+                      value={customerDetails.pincode}
+                      onChange={handleInputChange}
+                      maxLength={6}
+                      required
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Payment Section */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <div className="flex items-center gap-2 mb-4">
+                      <CreditCard className="h-5 w-5 text-green-600" />
+                      <h3 className="font-semibold text-gray-900">Payment Method</h3>
+                    </div>
+                    <UpiPayment amount={getTotalPrice()} />
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 text-base sm:text-lg"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Processing Order...
+                      </div>
+                    ) : (
+                      `Place Order - ₹${getTotalPrice().toFixed(2)}`
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
+
+      <AuthDialog 
+        isOpen={showAuthDialog} 
+        onClose={() => setShowAuthDialog(false)} 
+      />
     </div>
   );
 };
