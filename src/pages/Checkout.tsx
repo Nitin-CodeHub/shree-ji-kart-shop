@@ -10,12 +10,11 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, ShoppingCart, User, MapPin, Phone, CreditCard } from 'lucide-react';
-import UpiPayment from '@/components/UpiPayment';
 import AuthDialog from '@/components/AuthDialog';
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, getTotalPrice, clearCart } = useCart();
+  const { cart, getTotalPrice, clearCart } = useCart();
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   
@@ -29,10 +28,10 @@ const Checkout = () => {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   
   useEffect(() => {
-    if (items.length === 0) {
+    if (cart.length === 0) {
       navigate('/');
     }
-  }, [items, navigate]);
+  }, [cart, navigate]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -124,7 +123,7 @@ const Checkout = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('Submitting order...', { customerDetails, items, total: getTotalPrice() });
+      console.log('Submitting order...', { customerDetails, cart, total: getTotalPrice() });
       
       // Create order in database
       const { data: orderData, error: orderError } = await supabase
@@ -133,7 +132,7 @@ const Checkout = () => {
           {
             user_id: user.id,
             total_amount: getTotalPrice(),
-            items: items,
+            items: cart,
             customer_name: customerDetails.name,
             customer_phone: customerDetails.phone,
             customer_address: customerDetails.address,
@@ -159,7 +158,7 @@ const Checkout = () => {
             customerName: customerDetails.name,
             customerPhone: customerDetails.phone,
             totalAmount: getTotalPrice(),
-            items: items,
+            items: cart,
             customerAddress: customerDetails.address,
             customerPincode: customerDetails.pincode
           }
@@ -218,7 +217,7 @@ const Checkout = () => {
     );
   }
 
-  if (items.length === 0) {
+  if (cart.length === 0) {
     return null;
   }
 
@@ -260,7 +259,7 @@ const Checkout = () => {
               </CardHeader>
               <CardContent className="p-4 sm:p-6">
                 <div className="space-y-4">
-                  {items.map((item) => (
+                  {cart.map((item) => (
                     <div key={item.id} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
                       <div className="flex-1">
                         <h3 className="font-medium text-gray-900 text-sm sm:text-base">{item.name}</h3>
@@ -367,7 +366,11 @@ const Checkout = () => {
                       <CreditCard className="h-5 w-5 text-green-600" />
                       <h3 className="font-semibold text-gray-900">Payment Method</h3>
                     </div>
-                    <UpiPayment amount={getTotalPrice()} />
+                    <div className="bg-gray-50 p-4 rounded-lg text-center">
+                      <p className="text-sm text-gray-600 mb-2">Payment Method</p>
+                      <p className="font-medium text-gray-900">Cash on Delivery (COD)</p>
+                      <p className="text-xs text-gray-500 mt-1">Pay when your order arrives</p>
+                    </div>
                   </div>
 
                   <Button 
@@ -392,8 +395,8 @@ const Checkout = () => {
       </div>
 
       <AuthDialog 
-        isOpen={showAuthDialog} 
-        onClose={() => setShowAuthDialog(false)} 
+        open={showAuthDialog} 
+        onOpenChange={setShowAuthDialog} 
       />
     </div>
   );
