@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
@@ -128,18 +127,16 @@ const Checkout = () => {
       // Create order in database
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
-        .insert([
-          {
-            user_id: user.id,
-            total_amount: getTotalPrice(),
-            items: cart,
-            customer_name: customerDetails.name,
-            customer_phone: customerDetails.phone,
-            customer_address: customerDetails.address,
-            customer_pincode: customerDetails.pincode,
-            status: 'pending'
-          }
-        ])
+        .insert({
+          user_id: user.id,
+          total_amount: getTotalPrice(),
+          items: cart as any,
+          customer_name: customerDetails.name,
+          customer_phone: customerDetails.phone,
+          customer_address: customerDetails.address,
+          customer_pincode: customerDetails.pincode,
+          status: 'pending'
+        })
         .select()
         .single();
 
