@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,7 @@ const AdminPasswordPrompt: React.FC<AdminPasswordPromptProps> = ({ onAuthenticat
   const { toast } = useToast();
   const { user, signInWithGoogle } = useAuth();
 
-  // Your specific Gmail ID for admin access
+  // Only allow this specific email for admin access
   const ADMIN_EMAIL = 'nitinyadav7755321@gmail.com';
   
   // Fallback password for testing
@@ -96,31 +97,31 @@ const AdminPasswordPrompt: React.FC<AdminPasswordPromptProps> = ({ onAuthenticat
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center px-4 py-8">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-2xl p-6 sm:p-8 border border-orange-200">
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
-            <div className="bg-orange-100 p-3 rounded-full">
-              <Shield className="h-8 w-8 text-orange-600" />
+            <div className="bg-orange-100 p-4 rounded-full shadow-lg">
+              <Shield className="h-10 w-10 text-orange-600" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin Panel Access</h1>
-          <p className="text-gray-600 mt-2">
-            Admin panel में access के लिए password डालें
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Admin Panel Access</h1>
+          <p className="text-gray-600 text-sm sm:text-base">
+            Admin panel में access के लिए authentication करें
           </p>
         </div>
 
         {error && (
-          <Alert variant="destructive" className="mb-4">
+          <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription className="text-sm">{error}</AlertDescription>
           </Alert>
         )}
 
         <div className="space-y-4">
           <Button 
             onClick={handleGoogleLogin}
-            className="w-full bg-red-600 hover:bg-red-700 text-white"
+            className="w-full bg-red-600 hover:bg-red-700 text-white py-3 text-sm sm:text-base font-medium transition-all duration-200 shadow-md hover:shadow-lg"
             disabled={loading}
           >
             {loading ? 'Processing...' : 'Google से Admin Login करें'}
@@ -128,17 +129,17 @@ const AdminPasswordPrompt: React.FC<AdminPasswordPromptProps> = ({ onAuthenticat
           
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+              <span className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-muted-foreground">या</span>
+              <span className="bg-white px-3 text-gray-500 font-medium">या</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="password">Admin Password (Backup)</Label>
-              <div className="relative">
+              <Label htmlFor="password" className="text-sm font-medium text-gray-700">Admin Password (Backup)</Label>
+              <div className="relative mt-1">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
@@ -149,7 +150,7 @@ const AdminPasswordPrompt: React.FC<AdminPasswordPromptProps> = ({ onAuthenticat
                   }}
                   placeholder="Admin password डालें"
                   disabled={loading}
-                  className="pr-10"
+                  className="pr-12 py-3 text-sm sm:text-base border-gray-300 focus:border-orange-500 focus:ring-orange-500"
                 />
                 <Button
                   type="button"
@@ -160,9 +161,9 @@ const AdminPasswordPrompt: React.FC<AdminPasswordPromptProps> = ({ onAuthenticat
                   disabled={loading}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className="h-4 w-4 text-gray-400" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-4 w-4 text-gray-400" />
                   )}
                 </Button>
               </div>
@@ -170,7 +171,7 @@ const AdminPasswordPrompt: React.FC<AdminPasswordPromptProps> = ({ onAuthenticat
 
             <Button 
               type="submit" 
-              className="w-full bg-orange-600 hover:bg-orange-700"
+              className="w-full bg-orange-600 hover:bg-orange-700 py-3 text-sm sm:text-base font-medium transition-all duration-200 shadow-md hover:shadow-lg"
               disabled={loading || !password}
             >
               {loading ? 'Processing...' : 'Password से Login करें'}
@@ -178,10 +179,12 @@ const AdminPasswordPrompt: React.FC<AdminPasswordPromptProps> = ({ onAuthenticat
           </form>
         </div>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-500">
-            🔒 केवल {ADMIN_EMAIL} से access कर सकते हैं।
-          </p>
+        <div className="mt-8 text-center">
+          <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+            <p className="text-xs sm:text-sm text-orange-800">
+              🔒 <strong>Secure Access:</strong> केवल {ADMIN_EMAIL} से access कर सकते हैं।
+            </p>
+          </div>
         </div>
       </div>
     </div>
