@@ -23,7 +23,7 @@ const AdminPasswordPrompt: React.FC<AdminPasswordPromptProps> = ({ onAuthenticat
   const { user, signInWithGoogle } = useAuth();
 
   // Only allow this specific email for admin access
-  const ADMIN_EMAIL = 'nitinyadav7755321@gmail.com';
+  const ADMIN_EMAIL = 'ng9218028@gmail.com';
   
   // Fallback password for testing
   const ADMIN_PASSWORD = 'nitin@2007';

@@ -1,5 +1,9 @@
 
--- Create a policy that allows admin users to view all orders
+-- Update admin policies to use the new email address
+DROP POLICY IF EXISTS "Admin can view all orders" ON public.orders;
+DROP POLICY IF EXISTS "Admin can update all orders" ON public.orders;
+
+-- Create new policies with the updated admin email
 CREATE POLICY "Admin can view all orders" 
   ON public.orders 
   FOR SELECT 
@@ -11,7 +15,6 @@ CREATE POLICY "Admin can view all orders"
     )
   );
 
--- Create a policy that allows admin users to update all orders
 CREATE POLICY "Admin can update all orders" 
   ON public.orders 
   FOR UPDATE 
@@ -22,7 +25,3 @@ CREATE POLICY "Admin can update all orders"
       AND auth.users.email = 'ng9218028@gmail.com'
     )
   );
-
--- Enable realtime for orders table to get live updates
-ALTER TABLE public.orders REPLICA IDENTITY FULL;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
