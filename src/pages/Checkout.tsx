@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
@@ -10,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, ShoppingCart, User, MapPin, Phone, CreditCard } from 'lucide-react';
 import AuthDialog from '@/components/AuthDialog';
+import UpiPayment from '@/components/UpiPayment';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -25,6 +27,9 @@ const Checkout = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'upi'>('cod');
+  const [showUpiPayment, setShowUpiPayment] = useState(false);
+  const [currentOrderId, setCurrentOrderId] = useState<string>('');
   
   useEffect(() => {
     if (cart.length === 0) {
@@ -107,6 +112,39 @@ const Checkout = () => {
     return true;
   };
 
+  const createOrder = async () => {
+    try {
+      console.log('Creating order...', { customerDetails, cart, total: getTotalPrice() });
+      
+      // Create order in database
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user!.id,
+          total_amount: getTotalPrice(),
+          items: cart as any,
+          customer_name: customerDetails.name,
+          customer_phone: customerDetails.phone,
+          customer_address: customerDetails.address,
+          customer_pincode: customerDetails.pincode,
+          status: paymentMethod === 'cod' ? 'confirmed' : 'pending'
+        })
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error('Order creation error:', orderError);
+        throw orderError;
+      }
+
+      console.log('Order created successfully:', orderData);
+      return orderData;
+    } catch (error) {
+      console.error('Error creating order:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -122,31 +160,32 @@ const Checkout = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('Submitting order...', { customerDetails, cart, total: getTotalPrice() });
-      
-      // Create order in database
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user.id,
-          total_amount: getTotalPrice(),
-          items: cart as any,
-          customer_name: customerDetails.name,
-          customer_phone: customerDetails.phone,
-          customer_address: customerDetails.address,
-          customer_pincode: customerDetails.pincode,
-          status: 'pending'
-        })
-        .select()
-        .single();
+      const orderData = await createOrder();
+      setCurrentOrderId(orderData.id);
 
-      if (orderError) {
-        console.error('Order creation error:', orderError);
-        throw orderError;
+      if (paymentMethod === 'upi') {
+        // Show UPI payment interface
+        setShowUpiPayment(true);
+        setIsSubmitting(false);
+        return;
       }
 
-      console.log('Order created successfully:', orderData);
+      // For COD, complete the order immediately
+      await completeOrder(orderData.id);
 
+    } catch (error) {
+      console.error('Error placing order:', error);
+      toast({
+        title: "Error",
+        description: "Order placement में समस्या हुई। कृपया दोबारा कोशिश करें।",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+    }
+  };
+
+  const completeOrder = async (orderId: string) => {
+    try {
       // Send WhatsApp notification
       try {
         console.log('Sending WhatsApp notification...');
@@ -163,20 +202,18 @@ const Checkout = () => {
 
         if (notificationError) {
           console.error('WhatsApp notification error:', notificationError);
-          // Don't fail the order if notification fails
         } else {
           console.log('WhatsApp notification sent:', notificationData);
         }
       } catch (notificationError) {
         console.error('WhatsApp notification failed:', notificationError);
-        // Continue with success even if notification fails
       }
 
-      // Update user profile if needed
+      // Update user profile
       await supabase
         .from('profiles')
         .upsert({
-          id: user.id,
+          id: user!.id,
           name: customerDetails.name,
           phone: customerDetails.phone,
           address: customerDetails.address,
@@ -192,15 +229,40 @@ const Checkout = () => {
       navigate('/order-history');
 
     } catch (error) {
-      console.error('Error placing order:', error);
+      console.error('Error completing order:', error);
       toast({
         title: "Error",
-        description: "Order placement में समस्या हुई। कृपया दोबारा कोशिश करें।",
+        description: "Order completion में समस्या हुई।",
         variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePaymentSuccess = async () => {
+    try {
+      // Update order status to confirmed
+      await supabase
+        .from('orders')
+        .update({ status: 'confirmed' })
+        .eq('id', currentOrderId);
+
+      await completeOrder(currentOrderId);
+      setShowUpiPayment(false);
+    } catch (error) {
+      console.error('Error handling payment success:', error);
+      toast({
+        title: "Error",
+        description: "Payment confirmation में समस्या हुई।",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleBackFromUpi = () => {
+    setShowUpiPayment(false);
+    setIsSubmitting(false);
   };
 
   if (authLoading) {
@@ -216,6 +278,21 @@ const Checkout = () => {
 
   if (cart.length === 0) {
     return null;
+  }
+
+  if (showUpiPayment) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4">
+          <UpiPayment
+            amount={getTotalPrice()}
+            orderId={currentOrderId}
+            onPaymentSuccess={handlePaymentSuccess}
+            onBack={handleBackFromUpi}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -357,17 +434,56 @@ const Checkout = () => {
                     />
                   </div>
 
-                  {/* Payment Section */}
+                  {/* Payment Method Selection */}
                   <div className="pt-4 border-t border-gray-200">
                     <div className="flex items-center gap-2 mb-4">
                       <CreditCard className="h-5 w-5 text-green-600" />
                       <h3 className="font-semibold text-gray-900">Payment Method</h3>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg text-center">
-                      <p className="text-sm text-gray-600 mb-2">Payment Method</p>
-                      <p className="font-medium text-gray-900">Cash on Delivery (COD)</p>
-                      <p className="text-xs text-gray-500 mt-1">Pay when your order arrives</p>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          id="cod"
+                          name="paymentMethod"
+                          value="cod"
+                          checked={paymentMethod === 'cod'}
+                          onChange={(e) => setPaymentMethod(e.target.value as 'cod' | 'upi')}
+                          className="w-4 h-4 text-orange-600 focus:ring-orange-500"
+                        />
+                        <label htmlFor="cod" className="text-sm font-medium text-gray-700">
+                          Cash on Delivery (COD)
+                        </label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          id="upi"
+                          name="paymentMethod"
+                          value="upi"
+                          checked={paymentMethod === 'upi'}
+                          onChange={(e) => setPaymentMethod(e.target.value as 'cod' | 'upi')}
+                          className="w-4 h-4 text-orange-600 focus:ring-orange-500"
+                        />
+                        <label htmlFor="upi" className="text-sm font-medium text-gray-700">
+                          UPI Payment
+                        </label>
+                      </div>
                     </div>
+
+                    {paymentMethod === 'cod' && (
+                      <div className="bg-gray-50 p-4 rounded-lg mt-3">
+                        <p className="text-sm text-gray-600">Pay when your order arrives</p>
+                      </div>
+                    )}
+
+                    {paymentMethod === 'upi' && (
+                      <div className="bg-blue-50 p-4 rounded-lg mt-3">
+                        <p className="text-sm text-blue-600">Pay securely using UPI</p>
+                      </div>
+                    )}
                   </div>
 
                   <Button 
