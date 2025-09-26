@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# Welcome to our Shreeji cart website project
 
 ## Project info
 
