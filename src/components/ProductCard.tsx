@@ -14,6 +14,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const cartItem = cart.find(item => item.id === product.id);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const imageSrc = imageError ? '/placeholder.svg' : product.image;
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover-scale">
@@ -38,7 +39,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           
           {/* Actual Image */}
           <img
-            src={product.image}
+            src={imageSrc}
             alt={product.name}
             className={`w-full h-48 object-cover group-hover:scale-105 transition-all duration-300 ${
               imageLoaded ? 'opacity-100' : 'opacity-0'
