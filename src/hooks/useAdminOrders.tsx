@@ -75,6 +75,12 @@ export const useAdminOrders = () => {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    const allowedStatuses = new Set(['pending', 'confirmed', 'delivered', 'cancelled']);
+    if (!allowedStatuses.has(newStatus)) {
+      toast({ title: 'Invalid status', description: 'Choose a valid order status.', variant: 'destructive' });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('orders')
@@ -101,8 +107,8 @@ export const useAdminOrders = () => {
         description: statusMessage,
       });
 
-      // Refresh orders
-      fetchAllOrders();
+      // Refresh orders and surface any fetch failure through the hook state.
+      await fetchAllOrders();
     } catch (error) {
       console.error('Error updating status:', error);
     }

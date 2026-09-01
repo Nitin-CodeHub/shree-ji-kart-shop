@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
       });
       
-      Object.keys(sessionStorage || {}).forEach((key) => {
+      Object.keys(sessionStorage).forEach((key) => {
         if (key.startsWith('supabase.auth.') || key.includes('sb-') || key.startsWith('sb-')) {
           sessionStorage.removeItem(key);
         }

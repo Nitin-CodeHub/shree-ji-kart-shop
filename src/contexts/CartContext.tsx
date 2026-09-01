@@ -64,7 +64,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       if (existingItem) {
         return prev.map(item =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: Math.min(99, item.quantity + 1) }
             : item
         );
       }
@@ -77,6 +77,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   };
 
   const updateQuantity = (productId: number, quantity: number) => {
+    quantity = Math.min(99, Math.floor(quantity));
     if (quantity <= 0) {
       removeFromCart(productId);
       return;
