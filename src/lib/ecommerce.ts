@@ -1,11 +1,23 @@
 import { supabase } from '@/integrations/supabase/client'
-import type { Database, Json } from '@/integrations/supabase/types'
+import type { Json } from '@/integrations/supabase/types'
 
-export type CatalogProduct = Database['public']['Tables']['products']['Row'] & {
-  image_url?: string | null
-  category?: string | null
-  unit?: string | null
-  stock_quantity?: number | null
+// The generated Supabase types predate the activated ecommerce schema. Keep this
+// boundary typed until the project's type generator is run against the live schema.
+const db = supabase as any
+
+export type CatalogProduct = {
+  id: string
+  name: string
+  description: string | null
+  price: number
+  compare_at_price: number | null
+  image_url: string | null
+  category_id: string | null
+  unit: string
+  stock_quantity: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
 }
 
 export type CheckoutAddress = {
@@ -23,14 +35,18 @@ export type CheckoutLine = {
 /** Data-access boundary. Queries are intentionally isolated so UI components can switch to the expanded schema without rewrites. */
 export const ecommerceRepository = {
   async listProducts(category?: string) {
-    let query = supabase.from('products').select('*').order('created_at', { ascending: false })
-    if (category && category !== 'All') query = query.ilike('description', `%${category}%`)
+    let query = db.from('product_catalog').select('*, category:product_categories!category_id(name, slug)').eq('is_active', true).order('created_at', { ascending: false })
+    if (category && category !== 'All') query = query.eq('product_categories.name', category)
     const { data, error } = await query
-    return { data: (data ?? []) as CatalogProduct[], error }
+    const products = (data ?? []).map((product: any) => ({
+      ...product,
+      category: product.category?.name ?? null,
+    }))
+    return { data: products as CatalogProduct[], error }
   },
 
-  async getProduct(id: number) {
-    const { data, error } = await supabase.from('products').select('*').eq('id', id).single()
+  async getProduct(id: string) {
+    const { data, error } = await db.from('product_catalog').select('*').eq('id', id).eq('is_active', true).single()
     return { data: data as CatalogProduct | null, error }
   },
 
