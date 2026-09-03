@@ -181,15 +181,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signUp = async (email: string, password: string, userData?: any) => {
     try {
       setLoading(true);
-      cleanupAuthState();
-      
       console.log('Attempting to sign up user:', email);
       
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: import.meta.env.VITE_SUPABASE_REDIRECT_URL ?? `${window.location.origin}/`,
           data: userData || {}
         }
       });
@@ -220,8 +218,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      cleanupAuthState();
-      
       console.log('Attempting to sign in user:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -264,7 +260,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: import.meta.env.VITE_SUPABASE_REDIRECT_URL ?? `${window.location.origin}/`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -292,8 +288,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setLoading(true);
       console.log('Signing out user...');
       
-      cleanupAuthState();
       await supabase.auth.signOut({ scope: 'global' });
+      cleanupAuthState();
       
       toast({
         title: "Signed Out",

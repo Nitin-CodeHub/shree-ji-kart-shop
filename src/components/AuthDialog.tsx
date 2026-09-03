@@ -39,8 +39,17 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
   };
 
   const validateForm = () => {
-    if (!formData.email || !formData.password) {
+    const email = formData.email.trim();
+    if (!email || !formData.password) {
       setError("कृपया email और password भरें");
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setError("Password कम से कम 6 characters का होना चाहिए।");
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("कृपया सही email address भरें।");
       return false;
     }
 
@@ -61,8 +70,8 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
 
     try {
       const { error } = isLogin 
-        ? await signIn(formData.email, formData.password)
-        : await signUp(formData.email, formData.password, {
+        ? await signIn(formData.email.trim().toLowerCase(), formData.password)
+        : await signUp(formData.email.trim().toLowerCase(), formData.password, {
             name: formData.name,
             phone: formData.phone,
             address: formData.address,
@@ -70,9 +79,9 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
           });
 
       if (error) {
-        let errorMessage = error.message;
+        let errorMessage = 'Authentication में समस्या हुई। कृपया फिर से कोशिश करें।';
         
-        // Handle specific error cases in Hindi
+        // Handle actionable cases without exposing account details
         if (error.message?.includes('Email not confirmed')) {
           errorMessage = 'कृपया अपना email check करें और verification link पर click करें।';
         } else if (error.message?.includes('Invalid login credentials')) {
